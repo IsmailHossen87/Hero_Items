@@ -17,6 +17,7 @@ const CarSchema = new mongoose.Schema<ICar>({
     isDeleted: { type: Boolean },
     ranking: { type: Number, default: 0 },
     votes: { type: Number, default: 0 },
+    Top: { type: Number, default: 0 },
 }, { versionKey: false, timestamps: true })
 
 

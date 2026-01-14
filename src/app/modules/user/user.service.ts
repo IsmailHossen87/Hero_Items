@@ -9,7 +9,7 @@ import generateOTP from '../../../util/generateOTP';
 import { IUser } from './user.interface';
 import { User } from './user.model';
 import { redisClient } from '../../../config/radisConfig';
-import stripe from '../../config/stripe.config';
+import { Car } from '../Car/car.model';
 
 
 const OTP_EXPIRATION = 2 * 60;
@@ -70,15 +70,26 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
 
 const getUserProfileFromDB = async (
   user: JwtPayload
-): Promise<Partial<IUser>> => {
+) => {
+
+
   const { id } = user;
-  const isExistUser = await User.isExistUserById(id);
-  if (!isExistUser) {
+  const userData = await User.findById(id).lean();
+  const car = await Car.find({ userId: userData?._id });
+  if (!userData) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  return isExistUser;
+  return {
+    totalCar: car.length,
+    totalVote: car.reduce((acc, car) => acc + car.votes, 0),
+    ...userData,
+  };
 };
+
+
+
+
 
 const getAllUser = async () => {
   const isExistUser = await User.find();
@@ -113,9 +124,64 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
+// follow user
+const followUser = async (user: JwtPayload, id: string) => {
+  // id = target user (যাকে follow করা হচ্ছে)
+  if (user.id === id) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "You cannot follow yourself"
+    );
+  }
+
+  const isExistUser = await User.isExistUserById(id);
+  if (!isExistUser) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "User doesn't exist!"
+    );
+  }
+
+  // 1️⃣ Update target user (followers)
+  const updateDoc = await User.findOneAndUpdate(
+    {
+      _id: id,
+      followers: { $ne: user.id }
+    },
+    {
+      $addToSet: { followers: user.id },
+      $inc: { followersCount: 1 }
+    },
+    { new: true }
+  );
+
+  if (!updateDoc) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "You already follow this user"
+    );
+  }
+
+  // 2️⃣ Update current user (following)
+  await User.findOneAndUpdate(
+    {
+      _id: user.id,
+      following: { $ne: id }
+    },
+    {
+      $addToSet: { following: id },
+      $inc: { followingCount: 1 }
+    }
+  );
+
+  return updateDoc;
+};
+
+
 export const UserService = {
   createUserToDB,
   getUserProfileFromDB,
   getAllUser,
   updateProfileToDB,
+  followUser,
 };

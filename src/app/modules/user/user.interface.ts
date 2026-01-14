@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { USER_ROLES } from '../../../enums/user';
 
 export interface IAuthProvider {
@@ -16,25 +16,16 @@ export type IUser = {
   coin: number;
   point: number;
   bio?: string;
+  ranking: number;
+
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
+  followersCount: number;
+  followingCount: number;
+
   status: 'Active' | 'Blocked';
   verified: boolean;
   auths: IAuthProvider[];
-
-  personalInfo?: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    bio?: string;
-  };
-
-  address?: {
-    country?: string;
-    city?: string;
-    postalCode?: string;
-    street?: string;
-  };
-
-
   createdAt?: Date;
   updatedAt?: Date;
 };

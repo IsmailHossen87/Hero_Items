@@ -6,6 +6,7 @@ import { PaymentRouter } from '../app/modules/Payment/Payment.route';
 import { SettingRouter } from '../app/modules/Settings/SettingRoute';
 import { CategoryRoutes } from '../app/modules/Category/category.router';
 import { CarRouter } from '../app/modules/Car/car.router';
+import { Ranking_Voting_Router } from '../app/modules/Ranking&Vouting/ranking.router';
 
 
 const router = express.Router();
@@ -26,6 +27,10 @@ const apiRoutes = [
   {
     path: "/car",
     route: CarRouter
+  },
+  {
+    path: '/ranking',
+    route: Ranking_Voting_Router
   },
   {
     path: '/notification',

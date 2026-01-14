@@ -1,20 +1,21 @@
 import { USER_ROLES } from "../../../enums/user"
-import { excludeField } from "../../../util/Constant"
 import { QueryBuilder } from "../../../util/QueryBuilder"
+import { syncUserRank } from "../user/syncUserRank"
 import { User } from "../user/user.model"
 import { syncCarFieldsFromCategory } from "./bulkOps"
 import { ICar, IStatus, searchableFields } from "./car.interface"
 import { Car } from "./car.model"
 
 const createCar = async (payload: ICar) => {
-
     const car = await Car.create(payload)
+    await syncUserRank();
     return car
 }
 
 const getAllCars = async (query: any) => {
-    await syncCarFieldsFromCategory();
-    const queryBuilder = new QueryBuilder(Car.find().populate({ "path": "userId", "select": "name" }), query)
+    // await syncCarFieldsFromCategory();
+    const queryBuilder = new QueryBuilder(Car.find().populate({ "path": "userId", "select": "name" }).sort({ ranking: -1 }), query)
+
     const allCars = await queryBuilder.
         search(searchableFields)
         .filter()
@@ -28,12 +29,31 @@ const getAllCars = async (query: any) => {
 
     return { meta, data }
 }
+const SpecificCategoryCars = async (query: any, categoryId: string) => {
+    // await syncCarFieldsFromCategory();
+    const queryBuilder = new QueryBuilder(Car.find({ category: categoryId }).populate({ "path": "userId", "select": "name" }), query)
+
+    const allCars = await queryBuilder.
+        search(searchableFields)
+        .filter()
+        .sort()
+        .paginate()
+
+    const [meta, data] = await Promise.all([
+        allCars.getMeta(),
+        allCars.build()
+    ])
+
+    return { meta, data }
+}
+
+
 // MY Cars
 const myCars = async (query: any, userId: string) => {
 
-    await syncCarFieldsFromCategory({ userId: userId, status: IStatus.APPROVED });
+    // await syncCarFieldsFromCategory({ userId: userId, status: IStatus.APPROVED });
 
-    const queryBuilder = new QueryBuilder(Car.find({ userId: userId, status: IStatus.APPROVED }).populate({ "path": "userId", "select": "name" }), query)
+    const queryBuilder = new QueryBuilder(Car.find({ userId: userId, status: IStatus.APPROVED }).populate({ "path": "userId", "select": "name" }).sort({ ranking: -1 }), query)
     const myCars = await queryBuilder.
         filter()
         .sort()
@@ -78,6 +98,7 @@ const carDetails = async (carId: string, userId: string) => {
 // STATUS   __________ Change
 const changeStatus = async (carId: string, userId: string) => {
     const user = await User.findById(userId)
+
     if (!user) {
         throw new Error("User not found")
     }
@@ -97,8 +118,9 @@ const changeStatus = async (carId: string, userId: string) => {
     } else {
         status = IStatus.PENDING
     }
+    await syncCarFieldsFromCategory({ _id: carId });
 
     const car = await Car.findByIdAndUpdate({ _id: carId }, { status }, { new: true })
     return car
 }
-export const CarService = { createCar, getAllCars, myCars, carDetails, changeStatus }
+export const CarService = { createCar, getAllCars, myCars, carDetails, changeStatus, SpecificCategoryCars }

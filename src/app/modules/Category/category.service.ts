@@ -1,5 +1,7 @@
 import unlinkFile from "../../../shared/unlinkFile";
+import { QueryBuilder } from "../../../util/QueryBuilder";
 import { User } from "../user/user.model";
+import { searchableFieldsForCategory } from "./category.interface";
 import { Category } from "./category.model";
 
 const createCategory = async (payload: any) => {
@@ -53,8 +55,30 @@ const deleteCategory = async (id: string, userId: string) => {
     return category
 }
 
+
+const getAllCategory = async (query: any) => {
+    const baseQuery = Category.find(query);
+    const queryBilder = new QueryBuilder(baseQuery, query);
+
+    const car = await queryBilder.search(searchableFieldsForCategory)
+        .filter()
+        .sort()
+        .paginate();
+
+    const [meta, data] = await Promise.all([
+        car.getMeta(),
+        car.build()
+    ])
+
+    return { meta, data }
+}
+
+
+
+
 export const CategoryService = {
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getAllCategory
 }

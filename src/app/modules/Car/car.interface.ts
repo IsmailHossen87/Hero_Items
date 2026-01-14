@@ -8,7 +8,7 @@ export enum IStatus {
 export const searchableFields = [
     "make",
     "model",
-    "status"
+    "status",
 ];
 
 export interface ICar {
@@ -24,6 +24,7 @@ export interface ICar {
     battleCost: number,
     Reward: number,
     votes: number,
+    Top: number,
     createdAt: Date;
     updatedAt: Date;
     _id: string;

@@ -13,7 +13,6 @@ const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { ...userData } = req.body;
 
-    console.log(userData);
     const result = await UserService.createUserToDB(userData);
 
     sendResponse(res, {
@@ -34,7 +33,7 @@ const getUserProfile = catchAsync(async (req: Request, res: Response) => {
     success: true,
     statusCode: StatusCodes.OK,
     message: 'Profile data retrieved successfully',
-    data: result,
+    data: { ...result },
   });
 });
 
@@ -73,4 +72,20 @@ const updateProfile = catchAsync(
   }
 );
 
-export const UserController = { createUser, getUserProfile, updateProfile, getAllUser };
+// FOLLOW USER
+const followUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as JwtPayload;
+    const { id } = req.params;
+    const result = await UserService.followUser(user, id);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'User followed successfully',
+      data: result,
+    });
+  }
+);
+
+export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser };

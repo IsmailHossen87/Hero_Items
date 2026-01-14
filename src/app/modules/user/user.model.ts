@@ -50,11 +50,27 @@ const userSchema = new Schema<IUser, UserModal>(
       type: String,
       default: '',
     },
+    // FOLLOWERS
+    followers: [
+      { type: Schema.Types.ObjectId, ref: "User", default: [] }
+    ],
+    // FOLLOWING
+    following: [
+      { type: Schema.Types.ObjectId, ref: "User", default: [] }
+    ],
+    followersCount: { type: Number, default: 0 },
+    followingCount: { type: Number, default: 0 },
+
+
     coin: {
       type: Number,
       default: 0,
     },
     point: {
+      type: Number,
+      default: 0,
+    },
+    ranking: {
       type: Number,
       default: 0,
     },
@@ -67,19 +83,6 @@ const userSchema = new Schema<IUser, UserModal>(
       type: Boolean,
       default: false,
     },
-    personalInfo: {
-      firstName: { type: String, default: '' },
-      lastName: { type: String, default: '' },
-      phone: { type: String, default: '' },
-      bio: { type: String, default: '' },
-    },
-    address: {
-      country: { type: String, default: '' },
-      city: { type: String, default: '' },
-      postalCode: { type: String, default: '' },
-      street: { type: String, default: '' },
-    },
-
   },
   { timestamps: true, versionKey: false }
 );

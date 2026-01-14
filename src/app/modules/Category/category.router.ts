@@ -17,6 +17,9 @@ router.route("/create")
         validateRequest(CategoryValidation.createCategoryZodSchema),
         CategoryController.createCategory)
 
+router.route("/all")
+    .get(CategoryController.getAllCategory)
+
 router.route("/:id")
     .patch(auth(USER_ROLES.ADMIN),
         fileUploadHandler(),

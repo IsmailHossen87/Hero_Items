@@ -6,11 +6,12 @@ import sendResponse from '../../../shared/sendResponse';
 import catchAsync from '../../../shared/catchAsync';
 import { CarService } from './car.service';
 import { getMultipleFilesPath } from '../../../shared/getFilePath';
+import { syncUserRank } from '../user/syncUserRank';
 
 // CREATE Category
 const createCar = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const filePath = getMultipleFilesPath(req.files, "image")
-    console.log("File path", filePath)
+
     const userId = req.user?.id
 
     const payload = {
@@ -18,8 +19,9 @@ const createCar = catchAsync(async (req: Request, res: Response, next: NextFunct
         userId,
         images: filePath
     }
-    console.log("Car payload", payload)
+
     const category = await CarService.createCar(payload);
+
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -39,6 +41,20 @@ const getAllCars = catchAsync(async (req: Request, res: Response, next: NextFunc
         data: { ...cars }
     });
 });
+
+
+// SPECIFIC Category Cars
+const getSpecificCategoryCars = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const query = req.query
+    const categoryId = req.params.id
+    const cars = await CarService.SpecificCategoryCars(query, categoryId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Cars retrieved successfully',
+        data: { ...cars }
+    });
+})
 
 // GET MY Cars
 const getMyCars = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -78,4 +94,4 @@ const changeStatus = catchAsync(async (req: Request, res: Response, next: NextFu
         data: car
     });
 });
-export const carController = { createCar, getAllCars, getMyCars, carDetails, changeStatus }
+export const carController = { createCar, getAllCars, getMyCars, carDetails, changeStatus, getSpecificCategoryCars }

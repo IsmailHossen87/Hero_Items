@@ -24,6 +24,9 @@ router
   );
 
 router.route('/').get(UserController.getAllUser);
+router.route('/follow/:id').
+  post(auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.ORGANIZER), UserController.followUser)
+
 
 router
   .route('/create')

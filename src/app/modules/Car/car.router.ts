@@ -21,4 +21,8 @@ router.route("/my-car")
 router.route("/:id")
     .get(auth(USER_ROLES.USER, USER_ROLES.ADMIN), carController.carDetails)
     .patch(auth(USER_ROLES.USER, USER_ROLES.ADMIN), carController.changeStatus)
+
+router.route("/specific-category/:id")
+    .get(carController.getSpecificCategoryCars)
+
 export const CarRouter = router;

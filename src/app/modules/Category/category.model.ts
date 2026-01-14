@@ -1,5 +1,6 @@
 import mongoose, { model } from "mongoose";
 import { ICategory } from "./category.interface";
+import { Car } from "../Car/car.model";
 
 const categorySchema = new mongoose.Schema<ICategory>({
     image: {
@@ -52,6 +53,20 @@ const categorySchema = new mongoose.Schema<ICategory>({
         default: Date.now
     }
 });
+
+categorySchema.post("save", syncCars);
+categorySchema.post("findOneAndUpdate", syncCars);
+
+async function syncCars(doc: any) {
+    if (!doc) return;
+    await Car.updateMany(
+        { category: doc._id },
+        {
+            battleCost: doc.battleCost ?? 0,
+            Reward: doc.Reward ?? 0,
+        }
+    );
+}
 
 
 export const Category = model<ICategory>("Category", categorySchema);

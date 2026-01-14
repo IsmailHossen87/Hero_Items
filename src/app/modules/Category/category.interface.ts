@@ -1,5 +1,10 @@
 import { Types } from "mongoose"
 
+export const searchableFieldsForCategory = [
+    "name", "categorySlug"
+];
+
+
 export interface ICategory {
     image: string,
     userId: Types.ObjectId,
