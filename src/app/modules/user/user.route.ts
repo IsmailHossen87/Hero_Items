@@ -24,9 +24,8 @@ router
   );
 
 router.route('/').get(UserController.getAllUser);
-router.route('/follow/:id').
-  post(auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.ORGANIZER), UserController.followUser)
-
+router.route('/daily-claim').get(auth(USER_ROLES.USER), UserController.dailyClaim)
+router.route('/daily-preview').get(auth(USER_ROLES.USER), UserController.dailyPreview)
 
 router
   .route('/create')
@@ -34,5 +33,8 @@ router
     validateRequest(UserValidation.createUserZodSchema),
     UserController.createUser
   );
+router.route('/follow/:id').
+  post(auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.ORGANIZER), UserController.followUser)
+
 
 export const UserRoutes = router;

@@ -1,9 +1,31 @@
 import { JwtPayload } from "jsonwebtoken";
 import { Item } from "./item.model";
 import { USER_ROLES } from "../../../enums/user";
-import { Query } from "mongoose";
+import mongoose, { Query } from "mongoose";
 import { QueryBuilder } from "../../../util/QueryBuilder";
 import { searchableFieldsItem } from "./item.interface";
+import { User } from "../user/user.model";
+import AppError from "../../../errors/AppError";
+import httpStatus from "http-status-codes";
+import { emailHelper } from "../../../helpers/emailHelper";
+import { emailTemplate } from "../../../shared/emailTemplate";
+
+export interface IItemPurchase {
+    name: string;
+    email: string;
+    itemName: string;
+    image: string;
+    itemPrice: number;
+    purchaseDate: string;
+}
+export interface ItemPurchaseAdmin {
+    buyerName: string;
+    buyerEmail: string;
+    itemName: string;
+    image: string;
+    itemPrice: number;
+    purchaseDate: string;
+}
 
 const createItem = async (data: any, user: JwtPayload) => {
     if (USER_ROLES.ADMIN !== user.role) {
@@ -62,8 +84,118 @@ const ItemDetails = async (
 };
 
 
+// BuyItem
+const buyItem = async (id: string, user: JwtPayload) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // 1️⃣ Validate Item
+        const item = await Item.findById(id).session(session);
+        if (!item) {
+            throw new AppError(httpStatus.NOT_FOUND, "Item not found");
+        }
+
+        if (item.status !== "Active") {
+            throw new AppError(httpStatus.BAD_REQUEST, "Item is not active");
+        }
+
+        // 2️⃣ Validate User
+        const userInfo = await User.findById(user.id).session(session);
+        if (!userInfo) {
+            throw new AppError(httpStatus.NOT_FOUND, "User not found");
+        }
+
+        // 3️⃣ Check Authorization
+        if (item.userId === userInfo.id) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                "You cannot buy your own item"
+            );
+        }
+
+        // 4️⃣ Check Balance
+        const pointCost = Number(item.pointCost);
+        const userCoin = Number(userInfo.coin);
+
+        if (userCoin < pointCost) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                `Insufficient coins. You need ${pointCost} coins.`
+            );
+        }
+
+        // 5️⃣ Process Purchase
+        userInfo.coin -= pointCost;
+        item.userId = user.id;
+
+        await Promise.all([
+            userInfo.save({ session }),
+            item.save({ session })
+        ]);
+
+        // Commit transaction
+        await session.commitTransaction();
+
+        // 6️⃣ Send Emails (after successful transaction)
+        const purchaseDate = new Date().toLocaleString('en-US', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+        });
+
+        const customerEmailData = {
+            name: userInfo.name,
+            email: userInfo.email,
+            itemName: item.itemName,
+            image: item.image,
+            itemPrice: pointCost
+        } as IItemPurchase;
+
+        const adminEmailData = {
+            buyerName: userInfo.name,
+            buyerEmail: userInfo.email,
+            itemName: item.itemName,
+            image: item.image,
+            itemPrice: pointCost,
+            purchaseDate: purchaseDate
+        } as ItemPurchaseAdmin;
+
+        // Send emails (non-blocking)
+        Promise.all([
+            emailHelper.sendEmail(
+                emailTemplate.purchaseConfirmationTemplate(customerEmailData)
+            ),
+            // emailHelper.sendEmail(
+            //     emailTemplate.adminPurchaseNotificationTemplate(adminEmailData)
+            // )
+        ]).catch(error => {
+            console.error("Email sending failed:", error);
+        });
+
+        return item;
+
+    } catch (error) {
+        // Rollback transaction
+        await session.abortTransaction();
+
+        if (error instanceof AppError) {
+            throw error;
+        }
+
+        console.error("Purchase failed:", error);
+        throw new AppError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            "Failed to process purchase"
+        );
+
+    } finally {
+        session.endSession();
+    }
+};
+
 export const ItemService = {
     createItem,
     getAllItem,
-    ItemDetails
+    ItemDetails,
+    buyItem
 }

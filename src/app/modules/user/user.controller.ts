@@ -88,4 +88,33 @@ const followUser = catchAsync(
   }
 );
 
-export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser };
+
+// Preview
+const dailyPreview = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload;
+  const result = await UserService.previewDailyReward(user.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: { preview: result.preview }
+  });
+});
+
+// Claim
+const dailyClaim = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload;
+  const result = await UserService.claimDailyReward(user.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: { coins: result.coins }
+  });
+});
+
+
+
+export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser, dailyClaim, dailyPreview };

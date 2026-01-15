@@ -28,6 +28,8 @@ export type IUser = {
   auths: IAuthProvider[];
   createdAt?: Date;
   updatedAt?: Date;
+  lastDailyReward: Date;
+  dailyRewardPending: number;
 };
 
 export type UserModal = {

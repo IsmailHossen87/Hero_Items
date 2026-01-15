@@ -75,6 +75,9 @@ const carDetails = async (carId: string, userId: string) => {
     }
     // car
     const car = await Car.findById(carId).populate({
+        path: "userId",
+        select: "name"
+    }).populate({
         path: "category",
         select: "battleCost Reward name"
     });

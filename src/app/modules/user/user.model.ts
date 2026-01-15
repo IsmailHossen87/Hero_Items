@@ -74,6 +74,11 @@ const userSchema = new Schema<IUser, UserModal>(
       type: Number,
       default: 0,
     },
+    lastDailyReward: {
+      type: Date,
+      default: null,
+    },
+    dailyRewardPending: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ['Active', 'Blocked'],

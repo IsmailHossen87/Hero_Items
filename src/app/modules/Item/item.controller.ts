@@ -50,8 +50,21 @@ const ItemDetails = catchAsync(async (req: Request, res: Response, next: NextFun
     });
 })
 
+
+const buyItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const user = req.user;
+    const item = await ItemService.buyItem(id, user as JwtPayload);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Item fetched successfully',
+        data: item
+    });
+})
 export const ItemController = {
     createItem,
     getAllItem,
-    ItemDetails
+    ItemDetails,
+    buyItem
 }

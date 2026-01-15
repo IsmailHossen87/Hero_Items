@@ -13,6 +13,7 @@ router.route("/")
 
 router.route("/:id")
     .get(auth(USER_ROLES.ADMIN, USER_ROLES.USER), ItemController.ItemDetails)
-
+router.route("/buy-item/:id")
+    .get(auth(USER_ROLES.USER), ItemController.buyItem)
 
 export const ItemRouter = router
