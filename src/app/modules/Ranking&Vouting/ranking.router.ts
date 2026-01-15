@@ -5,9 +5,10 @@ import { RankingController } from "./ranking.controller";
 
 const router = Router()
 
-
 router.route("/:id")
+    .get(auth(USER_ROLES.ADMIN), RankingController.getVutHistory)
     .post(auth(USER_ROLES.USER), RankingController.giveVote)
+    .patch(auth(USER_ROLES.ADMIN), RankingController.resetVote)
 
 
 

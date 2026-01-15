@@ -1,8 +1,10 @@
+import { JwtPayload } from "jsonwebtoken";
 import AppError from "../../../errors/AppError"
 import { IStatus } from "../Car/car.interface";
 import { Car } from "../Car/car.model"
 import { User } from "../user/user.model"
 import { StatusCodes } from 'http-status-codes';
+import { USER_ROLES } from "../../../enums/user";
 
 const giveVote = async (userId: string, carId: string) => {
     const user = await User.findById(userId);
@@ -28,7 +30,7 @@ const giveVote = async (userId: string, carId: string) => {
 };
 
 const updateRanking = async (user: any, car: any) => {
-
+    console.log("user and car", user, car)
     // ✅ Deduct coins and add reward
     user.coin -= car.battleCost;
     user.coin += car.Reward;
@@ -36,6 +38,7 @@ const updateRanking = async (user: any, car: any) => {
 
     // ✅ Increment votes
     car.votes += 1;
+    car.votersIds.push(user._id);
     await car.save();
 
     // ✅ Update ranking and Top for all cars
@@ -50,7 +53,7 @@ const updateRanking = async (user: any, car: any) => {
         };
 
         // After voting, update ranking and Top
-        const cars = await Car.find().sort({ votes: -1 }); // Highest votes first
+        const cars = await Car.find().sort({ votes: -1 });
         for (let i = 0; i < cars.length; i++) {
             const rank = i + 1;
             const top = calculateTop(rank);
@@ -69,5 +72,36 @@ const updateRanking = async (user: any, car: any) => {
 }
 
 
+// VUT HIStory
+const vuterHistory = async (caiId: string, user: JwtPayload) => {
+    const userHistory = await User.findById(user.id);
+    if (!userHistory) {
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+    }
+    if (user.role !== USER_ROLES.ADMIN) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, "You are not authorized to get vut history");
+    }
+    const history = await Car.findById({ _id: caiId }).populate({ path: "votersIds", select: "name" }).sort({ createdAt: -1 });
+    return history;
+}
 
-export const RankingService = { giveVote }
+
+// 🈯🈯🈯
+const resetVote = async (carId: string, user: JwtPayload) => {
+    if (user.role !== USER_ROLES.ADMIN) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, "You are not authorized to reset vote");
+    }
+    const car = await Car.findById(carId);
+
+    if (!car) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Car not found");
+    }
+    car.votes = 0;
+    car.votersIds = [];
+    car.Top = 0;
+    car.ranking = 0;
+    await car.save();
+    return '';
+}
+
+export const RankingService = { giveVote, vuterHistory, resetVote }

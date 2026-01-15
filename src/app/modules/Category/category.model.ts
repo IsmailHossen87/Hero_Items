@@ -34,7 +34,7 @@ const categorySchema = new mongoose.Schema<ICategory>({
     },
     voteStatus: {
         type: Boolean,
-        default: false
+        default: true
     },
     battleCost: {
         type: Number,
@@ -54,7 +54,7 @@ const categorySchema = new mongoose.Schema<ICategory>({
     }
 });
 
-categorySchema.post("save", syncCars);
+// categorySchema.post("save", syncCars);
 categorySchema.post("findOneAndUpdate", syncCars);
 
 async function syncCars(doc: any) {

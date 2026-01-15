@@ -4,6 +4,7 @@ import { ICar, IStatus } from "./car.interface";
 const CarSchema = new mongoose.Schema<ICar>({
     images: [{ type: String, required: true }],
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    votersIds: [{ type: Schema.Types.ObjectId, ref: "User" }],
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     make: { type: String },
     year: { type: Date },

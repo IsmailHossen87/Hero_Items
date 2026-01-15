@@ -24,6 +24,7 @@ export interface ICar {
     battleCost: number,
     Reward: number,
     votes: number,
+    votersIds: Types.ObjectId[],
     Top: number,
     createdAt: Date;
     updatedAt: Date;

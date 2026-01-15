@@ -7,6 +7,7 @@ import { SettingRouter } from '../app/modules/Settings/SettingRoute';
 import { CategoryRoutes } from '../app/modules/Category/category.router';
 import { CarRouter } from '../app/modules/Car/car.router';
 import { Ranking_Voting_Router } from '../app/modules/Ranking&Vouting/ranking.router';
+import { ItemRouter } from '../app/modules/Item/item.router';
 
 
 const router = express.Router();
@@ -31,6 +32,10 @@ const apiRoutes = [
   {
     path: '/ranking',
     route: Ranking_Voting_Router
+  },
+  {
+    path: '/item',
+    route: ItemRouter
   },
   {
     path: '/notification',
