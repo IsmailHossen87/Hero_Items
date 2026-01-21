@@ -14,12 +14,13 @@ const createCar = async (payload: ICar) => {
 
 const getAllCars = async (query: any) => {
     // await syncCarFieldsFromCategory();
-    const queryBuilder = new QueryBuilder(Car.find().populate({ "path": "userId", "select": "name" }).sort({ ranking: -1 }), query)
+    const queryBuilder = new QueryBuilder(Car.find().populate({ "path": "userId", "select": "name" }).select("-votersIds").sort({ ranking: -1 }), query)
 
     const allCars = await queryBuilder.
         search(searchableFields)
         .filter()
         .sort()
+        .limit()
         .paginate()
 
     const [meta, data] = await Promise.all([
@@ -37,6 +38,7 @@ const SpecificCategoryCars = async (query: any, categoryId: string) => {
         search(searchableFields)
         .filter()
         .sort()
+        .limit()
         .paginate()
 
     const [meta, data] = await Promise.all([
@@ -68,19 +70,19 @@ const myCars = async (query: any, userId: string) => {
 }
 
 // CAR details
-const carDetails = async (carId: string, userId: string) => {
-    const user = await User.findById(userId)
-    if (!user) {
-        throw new Error("User not found")
-    }
-    // car
+const carDetails = async (carId: string,) => {
     const car = await Car.findById(carId).populate({
         path: "userId",
-        select: "name"
+        select: "name followersCount image"
     }).populate({
         path: "category",
-        select: "battleCost Reward name"
-    });
+        select: "battleCost Reward name "
+    })
+        .populate({
+            path: "modelId",
+            select: "description"
+        })
+        .select("-followers -votersIds").lean();
     if (!car) {
         throw new Error("Car not found")
     }
@@ -95,7 +97,13 @@ const carDetails = async (carId: string, userId: string) => {
         { new: true }
     );
 
-    return car
+    const { userId, modelId, ...rest } = car
+
+    return {
+        ...rest,
+        user: userId,
+        description: (modelId as any)?.description || null,
+    }
 }
 
 // STATUS   __________ Change

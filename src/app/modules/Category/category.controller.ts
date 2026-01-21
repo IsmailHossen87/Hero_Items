@@ -65,7 +65,8 @@ const getAllCategory = catchAsync(async (req: Request, res: Response, next: Next
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Category fetched successfully',
-        data: { ...category }
+        meta: category.meta,
+        data: category.data
     });
 })
 

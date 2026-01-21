@@ -13,10 +13,10 @@ import { Car } from '../Car/car.model';
 
 
 const OTP_EXPIRATION = 2 * 60;
-const getRandomCoins = (min = 5, max = 100) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-const isSameDay = (date1: Date, date2: Date) => {
+// const getRandomCoins = (min = 5, max = 100) => {
+//   return Math.floor(Math.random() * (max - min + 1)) + min;
+// };
+export const isSameDay = (date1: Date, date2: Date) => {
   return (
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
@@ -207,7 +207,7 @@ const previewDailyReward = async (userId: string) => {
   }
 
   // Random coins for preview
-  const reward = getRandomCoins(50, 100);
+  const reward = 100;
   user.dailyRewardPending = reward;
   await user.save();
 
@@ -232,7 +232,7 @@ const claimDailyReward = async (userId: string) => {
   }
 
   // Add pending coins to actual coins
-  const reward = user.dailyRewardPending || getRandomCoins(5, 20);
+  const reward = user.dailyRewardPending || 100;
   user.coin += reward;
   user.lastDailyReward = today;
   user.dailyRewardPending = 0; // reset pending

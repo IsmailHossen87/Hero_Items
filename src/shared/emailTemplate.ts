@@ -11,7 +11,7 @@ const createAccount = (values: { name: string; email: string; otp: number }) => 
           <img src="${websiteLogo}" alt="FundRaise Logo" style="display: block; margin: 0 auto 20px; width:150px" />
           <h2 style="color: #277E16; font-size: 24px; margin-bottom: 20px;">Hello ${values.name}, Welcome to FundRaise!</h2>
           <div style="text-align: center;">
-              <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Your verification code is:</p>
+              <p style="color: #555; font-size: 10px; line-height: 1.5; padding: 10px; margin-bottom: 20px;">Your verification code is:</p>
               <div style="background-color: #277E16; width: 80px; padding: 10px; text-align: center; border-radius: 8px; color: #fff; font-size: 25px; letter-spacing: 2px; margin: 20px auto;">${values.otp}</div>
               <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">This code is valid for 3 minutes. Use it to verify your fundraising account and start your campaign.</p>
           </div>

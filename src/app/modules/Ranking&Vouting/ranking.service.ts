@@ -5,6 +5,8 @@ import { Car } from "../Car/car.model"
 import { User } from "../user/user.model"
 import { StatusCodes } from 'http-status-codes';
 import { USER_ROLES } from "../../../enums/user";
+import { Setting } from "../Setting/setting.model";
+import { isSameDay } from "../user/user.service";
 
 const giveVote = async (userId: string, carId: string) => {
     const user = await User.findById(userId);
@@ -25,9 +27,40 @@ const giveVote = async (userId: string, carId: string) => {
         throw new AppError(StatusCodes.BAD_REQUEST, "Not enough coins");
     }
 
+    // 🔥 Admin setting load
+    const settings = await Setting.findOne();
+    const dailyLimit = settings?.voteLimit ?? 0;
+
+    const today = new Date();
+
+    // 🔄 New day হলে reset
+    if (!user.lastVoteDate || !isSameDay(user.lastVoteDate, today)) {
+        user.dailyVoteCount = 0;
+    }
+
+    // ❌ Limit crossed
+    if (user.dailyVoteCount >= dailyLimit) {
+        throw new AppError(
+            StatusCodes.BAD_REQUEST,
+            "Daily vote limit exceeded"
+        );
+    }
+
+    // ✅ Vote success
     updateRanking(user, car);
-    return '';
+
+    user.dailyVoteCount += 1;
+    user.lastVoteDate = today;
+    user.coin -= car.battleCost;
+
+    await user.save();
+
+    return {
+        message: "Vote given successfully",
+        remainingVote: dailyLimit - user.dailyVoteCount,
+    };
 };
+
 
 const updateRanking = async (user: any, car: any) => {
     console.log("user and car", user, car)

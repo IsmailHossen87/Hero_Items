@@ -18,7 +18,7 @@ router.route("/create")
         CategoryController.createCategory)
 
 router.route("/all")
-    .get(CategoryController.getAllCategory)
+    .get(auth(USER_ROLES.ADMIN, USER_ROLES.USER), CategoryController.getAllCategory)
 
 router.route("/:id")
     .patch(auth(USER_ROLES.ADMIN),

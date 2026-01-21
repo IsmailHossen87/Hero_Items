@@ -30,6 +30,17 @@ export type IUser = {
   updatedAt?: Date;
   lastDailyReward: Date;
   dailyRewardPending: number;
+
+  authentication?: {
+    isResetPassword: boolean;
+    otp: number | null;
+    expireAt: Date | null;
+  };
+
+  // user.model.ts
+  dailyVoteCount: number,
+  lastVoteDate: Date
+
 };
 
 export type UserModal = {

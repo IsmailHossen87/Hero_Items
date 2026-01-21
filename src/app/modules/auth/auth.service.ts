@@ -1,3 +1,4 @@
+
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload, Secret } from 'jsonwebtoken';
@@ -20,10 +21,10 @@ import { redisClient } from '../../../config/radisConfig';
 
 const OTP_EXPIRATION = 5 * 60; // 5 minutes
 
-// Login User
-
+// 🔐 Login User
 const loginUserFromDB = async (payload: ILoginData) => {
   const { email, password } = payload;
+
 
   const isExistUser = await User.findOne({ email }).select("+password");
   if (!isExistUser) {
@@ -32,7 +33,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
   if (!isExistUser.verified) {
     throw new AppError(
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.FAILED_DEPENDENCY,
       "Please verify your account, then try to login again"
     );
   }
@@ -56,6 +57,13 @@ const loginUserFromDB = async (payload: ILoginData) => {
     config.jwt.jwt_refresh_in
   );
 
+  // Store refresh token in Redis with expiration
+  const refreshTokenExpiry = 7 * 24 * 60 * 60; // 7 days in seconds
+  await redisClient.setEx(
+    `refreshToken:${isExistUser._id}`,
+    refreshTokenExpiry,
+    refreshToken
+  );
 
   return {
     accessToken,
@@ -63,7 +71,53 @@ const loginUserFromDB = async (payload: ILoginData) => {
   };
 };
 
+// 🚪 Logout - Blacklist both tokens
+const logout = async (refreshToken: string, accessToken: string) => {
+  // Verify refresh token
+  const decoded = jwtHelper.verifyToken(
+    refreshToken,
+    config.jwt.jwt_secret as Secret
+  ) as {
+    id: string;
+    role: string;
+    email: string;
+    exp: number;
+  };
 
+  if (!decoded?.id || !decoded?.role || !decoded?.email) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid refresh token payload");
+  }
+
+  // Verify access token
+  const accessDecoded = jwtHelper.verifyToken(
+    accessToken,
+    config.jwt.jwt_secret as Secret
+  ) as {
+    id: string;
+    role: string;
+    email: string;
+    exp: number;
+  };
+
+  if (!accessDecoded?.id) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid access token payload");
+  }
+
+  // Delete refresh token from Redis
+  await redisClient.del(`refreshToken:${decoded.id}`);
+
+  // Blacklist access token in Redis with TTL (until token expires)
+  const currentTime = Math.floor(Date.now() / 1000);
+  const ttl = accessDecoded.exp - currentTime;
+
+  if (ttl > 0) {
+    await redisClient.setEx(`blacklist:${accessToken}`, ttl, 'revoked');
+  }
+
+  return null;
+};
+
+// 🔄 Get New Access Token from Refresh Token
 const getNewAccessToken = async (token: string) => {
   try {
     // 1️⃣ Verify Refresh Token
@@ -80,40 +134,83 @@ const getNewAccessToken = async (token: string) => {
       throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid refresh token payload");
     }
 
-    // 2️⃣ Check if user actually exists
+    // 2️⃣ Check if refresh token exists in Redis
+    const storedRefreshToken = await redisClient.get(`refreshToken:${decoded.id}`);
+
+    if (!storedRefreshToken) {
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        "Refresh token not found or expired. Please login again."
+      );
+    }
+
+    if (storedRefreshToken !== token) {
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        "Invalid refresh token. Please login again."
+      );
+    }
+
+    // 3️⃣ Check if user actually exists
     const user = await User.findById(decoded.id);
 
     if (!user) {
       throw new AppError(StatusCodes.UNAUTHORIZED, "User no longer exists");
     }
 
+    if (!user.verified) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, "User account is not verified");
+    }
 
-    // 3️⃣ Create a new access token
+    // 4️⃣ Create a new access token
     const newAccessToken = jwtHelper.createToken(
-      { id: user._id.toString(), role: user.role },
+      { id: user._id.toString(), role: user.role, email: user.email },
       config.jwt.jwt_secret as Secret,
       config.jwt.jwt_expire_in as string
     );
+
+    // 5️⃣ Create a new refresh token (optional - for rotation)
     const newRefreshToken = jwtHelper.refreshToken(
-      { id: user._id.toString(), role: user.role },
+      { id: user._id.toString(), role: user.role, email: user.email },
       config.jwt.jwt_secret as Secret,
       config.jwt.jwt_refresh_in as string
     );
 
+    // 6️⃣ Update refresh token in Redis
+    const refreshTokenExpiry = 7 * 24 * 60 * 60; // 7 days
+    await redisClient.setEx(
+      `refreshToken:${user._id}`,
+      refreshTokenExpiry,
+      newRefreshToken
+    );
+
     return {
-      access_token: newAccessToken,
-      refresh_token: newRefreshToken
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
     };
-  } catch (error) {
+
+  } catch (error: any) {
+    // Clean up invalid refresh token from Redis
+    try {
+      const decoded = jwtHelper.verifyToken(
+        token,
+        config.jwt.jwt_secret as Secret
+      ) as { id: string };
+      if (decoded?.id) {
+        await redisClient.del(`refreshToken:${decoded.id}`);
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+
     throw new AppError(
       StatusCodes.UNAUTHORIZED,
-      "Invalid or expired refresh token"
+      error.message || "Invalid or expired refresh token"
     );
   }
 };
 
-
-// Verify Email or OTP
+// 📧 Resend OTP
 const resendOtpToDB = async (email: string) => {
   const isExistUser = await User.isExistUserByEmail(email);
   if (!isExistUser) {
@@ -131,9 +228,10 @@ const resendOtpToDB = async (email: string) => {
   return { message: 'OTP sent to your email.' };
 };
 
-
+// ✅ Verify Email or OTP
 const verifyEmailToDB = async (payload: IVerifyEmail) => {
-  const { email, oneTimeCode } = payload;
+  const { email, otp } = payload;
+  console.log("------------------------PAYLOAD", payload)
   const isExistUser = await User.findOne({ email }).select('+authentication');
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
@@ -155,7 +253,7 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
     throw new AppError(StatusCodes.BAD_REQUEST, 'OTP expired or not found');
   }
 
-  if (storedOTP !== String(oneTimeCode)) {
+  if (storedOTP !== String(otp)) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Wrong OTP');
   }
 
@@ -168,7 +266,7 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
   if (!isExistUser.verified) {
     await User.findOneAndUpdate(
       { _id: isExistUser._id },
-      { verified: true, authentication: { oneTimeCode: null, expireAt: null } }
+      { verified: true, authentication: { otp: null, expireAt: null } }
     );
     message = 'Email verified successfully.';
   } else {
@@ -177,7 +275,7 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
       {
         authentication: {
           isResetPassword: true,
-          oneTimeCode: null,
+          otp: null,
           expireAt: null,
         },
       }
@@ -195,12 +293,22 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
   return { data, message };
 };
 
-// Forget Password (Send OTP)
-
+// 🔑 Forget Password (Send OTP)
 const forgetPasswordToDB = async (email: string) => {
+  if (!email) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Email is required");
+  }
+
   const isExistUser = await User.isExistUserByEmail(email);
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  if (!isExistUser.verified) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Please verify your account first"
+    );
   }
 
   const otp = generateOTP();
@@ -214,22 +322,37 @@ const forgetPasswordToDB = async (email: string) => {
   return { message: 'OTP sent to your email.' };
 };
 
-// Reset Password
-
+// 🔄 Reset Password
 const resetPasswordToDB = async (
   token: string,
   payload: IAuthResetPassword
 ) => {
   const { newPassword, confirmPassword } = payload;
 
+  if (!token) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Token is required');
+  }
+
+  if (!newPassword || !confirmPassword) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'New password and confirm password are required'
+    );
+  }
+
   const isExistToken = await ResetToken.isExistToken(token);
   if (!isExistToken) {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized.');
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid or expired reset token.');
   }
 
   const isExistUser = await User.findById(isExistToken.user).select(
     '+authentication'
   );
+
+  if (!isExistUser) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User doesn't exist!");
+  }
+
   if (!isExistUser?.authentication?.isResetPassword) {
     throw new AppError(
       StatusCodes.UNAUTHORIZED,
@@ -241,14 +364,21 @@ const resetPasswordToDB = async (
   if (!isValid) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      'Token expired. Please try again.'
+      'Token expired. Please try forgot password again.'
     );
   }
 
   if (newPassword !== confirmPassword) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      "New password and Confirm password don't match!"
+      "New password and confirm password don't match!"
+    );
+  }
+
+  if (newPassword.length < 6) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Password must be at least 6 characters long"
     );
   }
 
@@ -265,15 +395,27 @@ const resetPasswordToDB = async (
   await User.findOneAndUpdate({ _id: isExistToken.user }, updateData, {
     new: true,
   });
+
+  // Delete the used reset token
+  await ResetToken.deleteOne({ _id: isExistToken._id });
+
+  return null;
 };
 
-// Change Password
-
+// 🔒 Change Password
 const changePasswordToDB = async (
   user: JwtPayload,
   payload: IChangePassword
 ) => {
   const { currentPassword, newPassword, confirmPassword } = payload;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "All password fields are required"
+    );
+  }
+
   const isExistUser = await User.findById(user.id).select('+password');
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
@@ -284,20 +426,27 @@ const changePasswordToDB = async (
     isExistUser.password
   );
   if (!isMatch) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect.');
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Current password is incorrect.');
   }
 
   if (currentPassword === newPassword) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      'Please choose a different password.'
+      'New password must be different from current password.'
     );
   }
 
   if (newPassword !== confirmPassword) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      "Password and Confirm password don't match."
+      "New password and confirm password don't match."
+    );
+  }
+
+  if (newPassword.length < 6) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Password must be at least 6 characters long"
     );
   }
 
@@ -320,5 +469,6 @@ export const AuthService = {
   resetPasswordToDB,
   changePasswordToDB,
   resendOtpToDB,
-  getNewAccessToken
+  getNewAccessToken,
+  logout
 };

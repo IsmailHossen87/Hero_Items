@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { Secret } from 'jsonwebtoken';
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../errors/AppError';
 import { jwtHelper } from '../../helpers/jwtHelper';
@@ -22,9 +22,14 @@ const auth =
           const verifyUser = jwtHelper.verifyToken(
             token,
             config.jwt.jwt_secret as Secret
-          );
+          ) as JwtPayload;
           //set user to header
-          req.user = verifyUser;
+          req.user = {
+            id: verifyUser.id,
+            role: verifyUser.role,
+            email: verifyUser.email,
+          };
+
 
           //guard user
           if (roles.length && !roles.includes(verifyUser.role)) {

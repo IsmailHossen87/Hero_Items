@@ -8,10 +8,6 @@ const createCategoryZodSchema = z.object({
             required_error: "Name is required",
             invalid_type_error: "Name must be a string"
         }),
-        categorySlug: z.string({
-            required_error: "Category slug is required",
-            invalid_type_error: "Category slug must be a string"
-        }),
         description: z.string({
             required_error: "Description is required",
             invalid_type_error: "Description must be a string"
@@ -31,9 +27,6 @@ const updateCategoryZodSchema = z.object({
     body: z.object({
         name: z.string({
             invalid_type_error: "Name must be a string"
-        }).optional(),
-        categorySlug: z.string({
-            invalid_type_error: "Category slug must be a string"
         }).optional(),
         description: z.string({
             invalid_type_error: "Description must be a string"

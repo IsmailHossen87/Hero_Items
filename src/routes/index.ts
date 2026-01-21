@@ -9,6 +9,7 @@ import { Ranking_Voting_Router } from '../app/modules/Ranking&Vouting/ranking.ro
 import { ItemRouter } from '../app/modules/Item/item.router';
 import { DashboardRouter } from '../app/modules/Dashboard/dashboard.router';
 import { SettingRouter } from '../app/modules/Setting/setting.router';
+import { ModelRoutes } from '../app/modules/model/model.router';
 
 
 const router = express.Router();
@@ -52,6 +53,10 @@ const apiRoutes = [
   }, {
     path: '/setting',
     route: SettingRouter,
+  },
+  {
+    path: '/model',
+    route: ModelRoutes
   }
 ];
 

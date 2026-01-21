@@ -1,10 +1,19 @@
+import AppError from "../../../errors/AppError";
 import unlinkFile from "../../../shared/unlinkFile";
 import { QueryBuilder } from "../../../util/QueryBuilder";
 import { User } from "../user/user.model";
 import { searchableFieldsForCategory } from "./category.interface";
 import { Category } from "./category.model";
+import httpStatus from "http-status-codes";
 
 const createCategory = async (payload: any) => {
+    const user = await User.findById(payload.userId);
+    if (!user) {
+        throw new Error("User not found");
+    }
+    if (user.role !== "ADMIN") {
+        throw new Error("User is not an admin");
+    }
     const category = await Category.create(payload);
     return category
 }
@@ -52,24 +61,30 @@ const deleteCategory = async (id: string, userId: string) => {
     if (!category) {
         throw new Error("Category not found");
     }
+    if (category.image) {
+        unlinkFile(category.image)
+    }
     return category
 }
 
 
 const getAllCategory = async (query: any) => {
-    const baseQuery = Category.find(query);
+    const baseQuery = Category.find();
     const queryBilder = new QueryBuilder(baseQuery, query);
 
     const car = await queryBilder.search(searchableFieldsForCategory)
         .filter()
         .sort()
+        .limit()
         .paginate();
 
     const [meta, data] = await Promise.all([
         car.getMeta(),
         car.build()
     ])
-
+    if (!data || data.length === 0) {
+        throw new AppError(httpStatus.NOT_FOUND, 'No categories found');
+    }
     return { meta, data }
 }
 

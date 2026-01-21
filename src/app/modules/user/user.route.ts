@@ -19,7 +19,6 @@ router
     auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.USER),
     fileUploadHandler(),
     parseFormDataMiddleware,
-    // validateRequest(UserValidation.updateUserZodSchema),
     UserController.updateProfile
   );
 

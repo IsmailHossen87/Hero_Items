@@ -35,6 +35,12 @@ export class QueryBuilder<T> {
     return this;
   }
 
+  limit(): this {
+    const limit = this.query.limit;
+    this.modelQuery = this.modelQuery.limit(Number(limit));
+    return this;
+  }
+
   // 📅 Date Range (weekly, monthly, yearly)
   dateRange(): this {
     const now = new Date();
@@ -98,7 +104,7 @@ export class QueryBuilder<T> {
 
   // 📊 Meta info (for pagination)
   async getMeta() {
-    const totalDocuments = await this.modelQuery.model.countDocuments();
+    const totalDocuments = await this.modelQuery.clone().countDocuments();
     const page = Number(this.query.page) || 1;
     const limit = Number(this.query.limit) || 10;
     const totalPage = Math.ceil(totalDocuments / limit);

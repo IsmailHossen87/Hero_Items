@@ -32,7 +32,8 @@ const getAllItem = catchAsync(async (req: Request, res: Response, next: NextFunc
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Item fetched successfully',
-        data: { ...items }
+        meta: items.meta,
+        data: items.data
     });
 })
 

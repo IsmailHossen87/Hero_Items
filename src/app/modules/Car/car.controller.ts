@@ -33,12 +33,19 @@ const createCar = catchAsync(async (req: Request, res: Response, next: NextFunct
 // GET ALL Cars
 const getAllCars = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const query = req.query
+
+
+    const { limit } = req.query
+    console.log("limit", limit)
+
+
     const cars = await CarService.getAllCars(query);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Cars retrieved successfully',
-        data: { ...cars }
+        meta: cars.meta,
+        data: cars.data
     });
 });
 
@@ -52,7 +59,8 @@ const getSpecificCategoryCars = catchAsync(async (req: Request, res: Response, n
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Cars retrieved successfully',
-        data: { ...cars }
+        meta: cars.meta,
+        data: cars.data
     });
 })
 
@@ -72,8 +80,7 @@ const getMyCars = catchAsync(async (req: Request, res: Response, next: NextFunct
 // Car Details
 const carDetails = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const carId = req.params.id
-    const userId = req.user?.id as string
-    const car = await CarService.carDetails(carId, userId);
+    const car = await CarService.carDetails(carId);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,

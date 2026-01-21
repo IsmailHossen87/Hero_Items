@@ -6,15 +6,17 @@ export enum IStatus {
 }
 
 export const searchableFields = [
-    "make",
+    "manufacturer",
     "model",
     "status",
+    "category"
 ];
 
 export interface ICar {
     year: Date,
-    make: string,
-    model: string,
+    manufacturer: string,
+    modelName: string,
+    modelId: Types.ObjectId;
     category: Types.ObjectId;
     images: string[];
     userId: Types.ObjectId;
@@ -22,6 +24,7 @@ export interface ICar {
     status: IStatus
     ranking: number,
     battleCost: number,
+    modelDescription: string,
     Reward: number,
     votes: number,
     votersIds: Types.ObjectId[],
