@@ -8,7 +8,7 @@ const CarSchema = new mongoose.Schema<ICar>({
     modelId: { type: Schema.Types.ObjectId, ref: "Model", required: true },
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     manufacturer: { type: String },
-    year: { type: Date },
+    year: { type: String },
     status: { type: String, enum: Object.values(IStatus), default: IStatus.PENDING },
     modelName: { type: String },
     categoryName: { type: String },

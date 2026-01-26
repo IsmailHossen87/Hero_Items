@@ -1,7 +1,6 @@
 import express from 'express';
 import { AuthRoutes } from '../app/modules/auth/auth.route';
 import { UserRoutes } from '../app/modules/user/user.route';
-import { NotificationRoutes } from '../app/modules/ADMIN/Notification/notification.route';
 import { PaymentRouter } from '../app/modules/Payment/Payment.route';
 import { CategoryRoutes } from '../app/modules/Category/category.router';
 import { CarRouter } from '../app/modules/Car/car.router';
@@ -10,6 +9,7 @@ import { ItemRouter } from '../app/modules/Item/item.router';
 import { DashboardRouter } from '../app/modules/Dashboard/dashboard.router';
 import { SettingRouter } from '../app/modules/Setting/setting.router';
 import { ModelRoutes } from '../app/modules/model/model.router';
+import { notificationRouter } from '../app/modules/notification/notification.router';
 
 
 const router = express.Router();
@@ -44,10 +44,6 @@ const apiRoutes = [
     route: ItemRouter
   },
   {
-    path: '/notification',
-    route: NotificationRoutes,
-  },
-  {
     path: '/payment',
     route: PaymentRouter,
   }, {
@@ -57,6 +53,10 @@ const apiRoutes = [
   {
     path: '/model',
     route: ModelRoutes
+  },
+  {
+    path: '/notification',
+    route: notificationRouter
   }
 ];
 

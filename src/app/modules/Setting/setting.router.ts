@@ -17,7 +17,13 @@ router.route("/termsCondition")
 router.route("/privacyPolicy")
     .put(auth(USER_ROLES.ADMIN), SettingController.privacyPolicyCreate)
 
-router.route("/:key")
-    .get(auth(USER_ROLES.ADMIN, USER_ROLES.USER), SettingController.getSetting)
+router.route("/globalSetting")
+    .get(SettingController.getSetting)
+
+router.route("/termsCondition")
+    .get(SettingController.termsCondition)
+
+router.route("/privacyPolicy")
+    .get(SettingController.privacyPolicy)
 
 export const SettingRouter = router

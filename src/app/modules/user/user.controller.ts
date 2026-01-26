@@ -27,7 +27,8 @@ const createUser = catchAsync(
 // GET USER PROFILE
 const getUserProfile = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as JwtPayload;
-  const result = await UserService.getUserProfileFromDB(user);
+  const { userId } = req.query;
+  const result = await UserService.getUserProfileFromDB(user, userId as string);
 
   sendResponse(res, {
     success: true,
@@ -61,13 +62,14 @@ const updateProfile = catchAsync(
       image,
       ...req.body,
     };
-    // const result = await UserService.updateProfileToDB(user, data);
+
+    const result = await UserService.updateProfileToDB(user, data);
 
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
       message: 'Profile updated successfully',
-      data: null,
+      data: result,
     });
   }
 );
@@ -83,7 +85,7 @@ const followUser = catchAsync(
       success: true,
       statusCode: StatusCodes.OK,
       message: 'User followed successfully',
-      data: result,
+      data: { follow: result.isFollowing },
     });
   }
 );
@@ -95,7 +97,7 @@ const dailyPreview = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.previewDailyReward(user.id);
 
   sendResponse(res, {
-    success: true,
+    success: result.success,
     statusCode: StatusCodes.OK,
     message: result.message,
     data: { preview: result.preview }
@@ -108,7 +110,7 @@ const dailyClaim = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.claimDailyReward(user.id);
 
   sendResponse(res, {
-    success: true,
+    success: result.success,
     statusCode: StatusCodes.OK,
     message: result.message,
     data: { coins: result.coins }
@@ -116,5 +118,25 @@ const dailyClaim = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload;
+  const { id } = req.query;
+  const { password } = req.body
+  console.log(req.query)
+  const result = await UserService.deleteUser(
+    user,
+    typeof id === "string" ? id : undefined,
+    typeof password === "string" ? password : undefined
+  );
 
-export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser, dailyClaim, dailyPreview };
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'User deleted successfully',
+    data: result,
+  });
+});
+
+
+export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser, dailyClaim, dailyPreview, deleteUser };

@@ -46,7 +46,7 @@ const ItemDetails = catchAsync(async (req: Request, res: Response, next: NextFun
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: 'Item fetched successfully',
+        message: 'Item purchased successfully',
         data: item
     });
 })

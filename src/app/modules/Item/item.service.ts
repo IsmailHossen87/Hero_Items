@@ -9,6 +9,10 @@ import AppError from "../../../errors/AppError";
 import httpStatus from "http-status-codes";
 import { emailHelper } from "../../../helpers/emailHelper";
 import { emailTemplate } from "../../../shared/emailTemplate";
+import generateNumber from "../../../util/generateOTP";
+import { NOTIFICATION_TYPE } from "../notification/notification.interface";
+import { saveNotification } from "../notification/sharedNotification";
+import { sendReaujableNotification } from "../notification/notification.model";
 
 export interface IItemPurchase {
     name: string;
@@ -69,6 +73,10 @@ const ItemDetails = async (
     if (!item) {
         throw new Error("Item not found");
     }
+    const visitor = await User.findById(user?.id);
+    if (!visitor) {
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
 
     // শুধুমাত্র যখন ActiveStatus === true তখনই toggle হবে
     if (ActiveStatus === true) {
@@ -80,14 +88,13 @@ const ItemDetails = async (
         await item.save();
     }
 
-    return item;
+    return { ...item.toObject(), balance: visitor.coin };
 };
 
 
 // BuyItem
 const buyItem = async (id: string, user: JwtPayload) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
 
     try {
         // 1️⃣ Validate Item
@@ -134,8 +141,28 @@ const buyItem = async (id: string, user: JwtPayload) => {
             item.save({ session })
         ]);
 
-        // Commit transaction
-        await session.commitTransaction();
+        // sendReaujableNotification({
+        //     fcmToken: userInfo.fcmToken,
+        //     title: "Item Purchased",
+        //     body: "You have purchased an item",
+        //     type: NOTIFICATION_TYPE.BUY_ITEM,
+        //     carId:"",
+        //     senderId: user.id,
+        //     receiverId: userInfo.id,
+        //     image:item?.image as string,
+        // })
+
+        const valueForNotification = {
+            title: "Item Purchased",
+            body: "You have purchased an item",
+            type: NOTIFICATION_TYPE.BUY_ITEM,
+            notificationType: "NOTIFICATION",
+            status: "SUCCESS",
+            itemId: item.id,
+            senderId: user.id,
+            receiverId: item.userId,
+        }
+        saveNotification(valueForNotification)
 
         // 6️⃣ Send Emails (after successful transaction)
         const purchaseDate = new Date().toLocaleString('en-US', {
@@ -143,53 +170,46 @@ const buyItem = async (id: string, user: JwtPayload) => {
             timeStyle: 'short'
         });
 
-        const customerEmailData = {
-            name: userInfo.name,
-            email: userInfo.email,
-            itemName: item.itemName,
-            image: item.image,
-            itemPrice: pointCost
-        } as IItemPurchase;
+        const otp = generateNumber(8)
 
-        const adminEmailData = {
-            buyerName: userInfo.name,
-            buyerEmail: userInfo.email,
-            itemName: item.itemName,
-            image: item.image,
-            itemPrice: pointCost,
-            purchaseDate: purchaseDate
-        } as ItemPurchaseAdmin;
+        // const customerEmailData = {
+        //     name: userInfo.name,
+        //     email: userInfo.email,
+        //     itemName: item.itemName,
+        //     image: item.image,
+        //     itemPrice: pointCost
+        // } as IItemPurchase;
 
-        // Send emails (non-blocking)
-        Promise.all([
-            emailHelper.sendEmail(
-                emailTemplate.purchaseConfirmationTemplate(customerEmailData)
-            ),
-            // emailHelper.sendEmail(
-            //     emailTemplate.adminPurchaseNotificationTemplate(adminEmailData)
-            // )
-        ]).catch(error => {
-            console.error("Email sending failed:", error);
-        });
+        // const adminEmailData = {
+        //     buyerName: userInfo.name,
+        //     buyerEmail: userInfo.email,
+        //     itemName: item.itemName,
+        //     image: item.image,
+        //     itemPrice: pointCost,
+        //     purchaseDate: purchaseDate
+        // } as ItemPurchaseAdmin;
 
-        return item;
+        // // Send emails (non-blocking)
+        // Promise.all([
+        //     emailHelper.sendEmail(
+        //         emailTemplate.purchaseConfirmationTemplate(customerEmailData)
+        //     ),
+        //     // emailHelper.sendEmail(
+        //     //     emailTemplate.adminPurchaseNotificationTemplate(adminEmailData)
+        //     // )
+        // ]).catch(error => {
+        //     console.error("Email sending failed:", error);
+        // });
+
+        return otp;
 
     } catch (error) {
-        // Rollback transaction
-        await session.abortTransaction();
-
-        if (error instanceof AppError) {
-            throw error;
-        }
-
         console.error("Purchase failed:", error);
         throw new AppError(
             httpStatus.INTERNAL_SERVER_ERROR,
             "Failed to process purchase"
         );
 
-    } finally {
-        session.endSession();
     }
 };
 

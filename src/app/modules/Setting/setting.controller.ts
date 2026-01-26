@@ -51,20 +51,42 @@ const privacyPolicyCreate = catchAsync(async (req: Request, res: Response, next:
 
 
 const getSetting = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    console.log("req.param.key", req.params.key)
-    const category = await SettingService.getAllSetting(req.params.key);
+    const category = await SettingService.getAllSetting();
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Setting fetched successfully',
-        data: category
+        data: category[0]
     });
 })
 
+
+const termsCondition = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const category = await SettingService.termsCondition();
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Setting fetched successfully',
+        data: category[0]
+    });
+})
+
+const privacyPolicy = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
+    const category = await SettingService.privacyPolicy();
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Setting fetched successfully',
+        data: category[0]
+    });
+})
 
 export const SettingController = {
     globalSettingCreate,
     termsConditionCreate,
     privacyPolicyCreate,
-    getSetting
+    getSetting,
+    termsCondition,
+    privacyPolicy
 }

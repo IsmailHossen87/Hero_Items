@@ -1,5 +1,9 @@
 import { USER_ROLES } from "../../../enums/user"
+import { sendFirebaseNotification } from "../../../shared/sendNotification"
 import { QueryBuilder } from "../../../util/QueryBuilder"
+import { NOTIFICATION_TYPE } from "../notification/notification.interface"
+import { sendReaujableNotification } from "../notification/notification.model"
+import { saveNotification } from "../notification/sharedNotification"
 import { syncUserRank } from "../user/syncUserRank"
 import { User } from "../user/user.model"
 import { syncCarFieldsFromCategory } from "./bulkOps"
@@ -7,8 +11,36 @@ import { ICar, IStatus, searchableFields } from "./car.interface"
 import { Car } from "./car.model"
 
 const createCar = async (payload: ICar) => {
-    const car = await Car.create(payload)
-    await syncUserRank();
+    const { images, ...rest } = payload
+    const user = await User.findById(rest.userId)
+    if (!user) {
+        throw new Error("User not found")
+    }
+    const car = await Car.create(rest)
+    //   send notification 🔔🔔🔔🔔🔔
+    // sendReaujableNotification({
+    //     fcmToken: user?.fcmToken,
+    //     title: "Car Created",
+    //     body: "You have created a car",
+    //     type: NOTIFICATION_TYPE.CREATE_CAR,
+    //     carId: car.id,
+    //     senderId: user.id,
+    //     receiverId: '',
+    //     image: images[0],
+    // })
+
+    const valueForNotification = {
+        title: "Car Created",
+        body: "You have created a car",
+        type: NOTIFICATION_TYPE.CREATE_CAR,
+        notificationType: "NOTIFICATION",
+        status: "SUCCESS",
+        carId: car.id,
+        senderId: payload.userId,
+        receiverId: payload.userId,
+    }
+    saveNotification(valueForNotification)
+
     return car
 }
 
@@ -117,6 +149,8 @@ const changeStatus = async (carId: string, userId: string) => {
         throw new Error("You are not authorized to change the status")
     }
     const CarInfo = await Car.findById(carId)
+    const carOwner = await User.findById(CarInfo?.userId)
+
     if (!CarInfo) {
         throw new Error("Car not found")
     }
@@ -132,6 +166,31 @@ const changeStatus = async (carId: string, userId: string) => {
     await syncCarFieldsFromCategory({ _id: carId });
 
     const car = await Car.findByIdAndUpdate({ _id: carId }, { status }, { new: true })
+    // NOTIFICATION 🔔🔔🔔
+    // sendReaujableNotification({
+    //     fcmToken: carOwner?.fcmToken,
+    //     title: "Car Status Changed",
+    //     body: "Your car status has been changed to",
+    //     type: NOTIFICATION_TYPE.CAR_APPROVED,
+    //     carId: carId,
+    //     senderId: userId,
+    //     receiverId: carOwner?.id,
+    //     image: CarInfo?.images[0],
+    // })
+
+    const valueForNotification = {
+        title: "Car Status Changed",
+        body: "Your car status has been changed to",
+        type: NOTIFICATION_TYPE.CAR_APPROVED,
+        notificationType: "NOTIFICATION",
+        status: "SUCCESS",
+        senderId: userId,
+        carId: carId,
+        receiverId: carOwner?.id,
+    }
+    saveNotification(valueForNotification)
+    // 🔔🔔🔔🔔
+
     return car
 }
 export const CarService = { createCar, getAllCars, myCars, carDetails, changeStatus, SpecificCategoryCars }

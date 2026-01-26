@@ -11,7 +11,6 @@ import { syncUserRank } from '../user/syncUserRank';
 // CREATE Category
 const createCar = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const filePath = getMultipleFilesPath(req.files, "image")
-
     const userId = req.user?.id
 
     const payload = {
@@ -25,7 +24,7 @@ const createCar = catchAsync(async (req: Request, res: Response, next: NextFunct
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
-        message: 'Category created successfully',
+        message: 'Car created successfully',
         data: category
     });
 });
@@ -33,11 +32,6 @@ const createCar = catchAsync(async (req: Request, res: Response, next: NextFunct
 // GET ALL Cars
 const getAllCars = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const query = req.query
-
-
-    const { limit } = req.query
-    console.log("limit", limit)
-
 
     const cars = await CarService.getAllCars(query);
     sendResponse(res, {

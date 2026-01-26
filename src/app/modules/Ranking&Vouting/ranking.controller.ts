@@ -9,8 +9,6 @@ import { JwtPayload } from 'jsonwebtoken';
 // CREATE Category
 const giveVote = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id
-
-    console.log("HELLOW _bangladesh")
     const category = await RankingService.giveVote(userId as string, req.params.id);
     sendResponse(res, {
         statusCode: StatusCodes.OK,

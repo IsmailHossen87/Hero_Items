@@ -9,11 +9,12 @@ export const searchableFields = [
     "manufacturer",
     "model",
     "status",
-    "category"
+    "category",
+    "userId"
 ];
 
 export interface ICar {
-    year: Date,
+    year: string,
     manufacturer: string,
     modelName: string,
     modelId: Types.ObjectId;

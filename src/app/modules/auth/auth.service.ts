@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload, Secret } from 'jsonwebtoken';
@@ -14,10 +13,10 @@ import {
   IVerifyEmail,
 } from '../../../types/auth';
 import cryptoToken from '../../../util/cryptoToken';
-import generateOTP from '../../../util/generateOTP';
 import { ResetToken } from '../resetToken/resetToken.model';
 import { User } from '../user/user.model';
 import { redisClient } from '../../../config/radisConfig';
+import generateNumber from '../../../util/generateOTP';
 
 const OTP_EXPIRATION = 5 * 60; // 5 minutes
 
@@ -217,7 +216,7 @@ const resendOtpToDB = async (email: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  const otp = generateOTP();
+  const otp = generateNumber();
   const redisKey = `otp:verify:${email}`;
   await redisClient.setEx(redisKey, OTP_EXPIRATION, otp.toString());
 
@@ -231,7 +230,7 @@ const resendOtpToDB = async (email: string) => {
 // ✅ Verify Email or OTP
 const verifyEmailToDB = async (payload: IVerifyEmail) => {
   const { email, otp } = payload;
-  console.log("------------------------PAYLOAD", payload)
+
   const isExistUser = await User.findOne({ email }).select('+authentication');
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
@@ -311,7 +310,7 @@ const forgetPasswordToDB = async (email: string) => {
     );
   }
 
-  const otp = generateOTP();
+  const otp = generateNumber();
   const redisKey = `otp:reset:${email}`;
   await redisClient.setEx(redisKey, OTP_EXPIRATION, otp.toString());
 

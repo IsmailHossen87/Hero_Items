@@ -18,6 +18,7 @@ export type IUser = {
   bio?: string;
   ranking: number;
 
+  isFollowing: boolean;
   followers: Types.ObjectId[];
   following: Types.ObjectId[];
   followersCount: number;
@@ -37,9 +38,12 @@ export type IUser = {
     expireAt: Date | null;
   };
 
+  address?: string;
   // user.model.ts
   dailyVoteCount: number,
-  lastVoteDate: Date
+  lastVoteDate: Date,
+  fcmToken?: string;
+
 
 };
 

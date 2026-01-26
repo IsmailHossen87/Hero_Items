@@ -7,17 +7,23 @@ import { StatusCodes } from 'http-status-codes';
 import { USER_ROLES } from "../../../enums/user";
 import { Setting } from "../Setting/setting.model";
 import { isSameDay } from "../user/user.service";
+import { saveNotification } from "../notification/sharedNotification";
+import { NOTIFICATION_TYPE } from "../notification/notification.interface";
+import { sendReaujableNotification } from "../notification/notification.model";
 
 const giveVote = async (userId: string, carId: string) => {
     const user = await User.findById(userId);
+
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
 
     const car = await Car.findById(carId);
+
     if (!car) {
         throw new AppError(StatusCodes.NOT_FOUND, "Car not found");
     }
+    const carOwner = await User.findById(car?.userId)
 
     if (car.status !== IStatus.APPROVED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Car is not approved");
@@ -45,15 +51,50 @@ const giveVote = async (userId: string, carId: string) => {
             "Daily vote limit exceeded"
         );
     }
-
     // ✅ Vote success
     updateRanking(user, car);
+
+    // FIRREBASE NOTIFICATION  🔔🔔🔔🔔🔔
+    //  sendReaujableNotification({
+    //     fcmToken: user?.fcmToken,
+    //     title: "Vote Given",
+    //     body: "Your vote has been given successfully",
+    //     type: NOTIFICATION_TYPE.VOTE,
+    //     carId: car._id.toString(),
+    //     senderId: user._id.toString(),
+    //     receiverId: car.userId.toString(),
+    //     image: car.images?.[0],
+    // });
+    //  sendReaujableNotification({
+    //     fcmToken: carOwner?.fcmToken,
+    //     title: "Get Vote",
+    //     body: "Your car has been voted successfully",
+    //     type: NOTIFICATION_TYPE.VOTE,
+    //     carId: car._id.toString(),
+    //     senderId: user._id.toString(),
+    //     receiverId: car.userId.toString(),
+    //     image: car.images?.[0],
+    // });
+
+    const valueForNotification = {
+        senderId: user._id,
+        receiverId: car.userId,
+        title: "Vote Given",
+        body: "Your vote has been given successfully",
+        carId: car._id,
+        notificationType: "NOTIFICATION",
+        type: NOTIFICATION_TYPE.VOTE,
+        status: "SUCCESS",
+    }
+
+    saveNotification(valueForNotification)
+    // 🔔🔔🔔🔔🔔
 
     user.dailyVoteCount += 1;
     user.lastVoteDate = today;
     user.coin -= car.battleCost;
 
-    await user.save();
+    user.save();
 
     return {
         message: "Vote given successfully",

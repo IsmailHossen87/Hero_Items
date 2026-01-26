@@ -55,17 +55,38 @@ const privacyPolicyCreate = async (body: any, user: JwtPayload) => {
     return privacyPolicy
 }
 
-const getAllSetting = async (key: string) => {
-    const setting = await Setting.find({ globalSettingType: key })
+const getAllSetting = async () => {
+    const setting = await Setting.find({ globalSettingType: ISettingType.globalSetting })
     if (!setting) {
         throw new AppError(httpStatus.NOT_FOUND, "Setting not found")
     }
     return setting
 }
 
+
+const termsCondition = async () => {
+    const setting = await Setting.find({ globalSettingType: ISettingType.termsCondition })
+    if (!setting) {
+        throw new AppError(httpStatus.NOT_FOUND, "Setting not found")
+    }
+    return setting
+}
+const privacyPolicy = async () => {
+    const result = await Setting.find({ globalSettingType: ISettingType.privacyPolicy });
+
+    if (!result) {
+        throw new AppError(httpStatus.NOT_FOUND, "Setting not found");
+    }
+
+    return result;
+};
+
+
 export const SettingService = {
     globalSettingCreate,
     termsConditionCreate,
     privacyPolicyCreate,
-    getAllSetting
+    getAllSetting,
+    termsCondition,
+    privacyPolicy
 }

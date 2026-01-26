@@ -18,6 +18,7 @@ export default {
     jwt_expire_in: process.env.JWT_EXPIRE_IN,
     jwt_refresh_in: process.env.JWT_REFREST_IN,
   },
+  FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
   email: {
     from: process.env.EMAIL_FROM,
     user: process.env.EMAIL_USER,

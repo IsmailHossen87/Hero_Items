@@ -22,9 +22,12 @@ router
     UserController.updateProfile
   );
 
+
+
 router.route('/').get(UserController.getAllUser);
-router.route('/daily-claim').get(auth(USER_ROLES.USER), UserController.dailyClaim)
+router.route('/daily-claim').post(auth(USER_ROLES.USER), UserController.dailyClaim)
 router.route('/daily-preview').get(auth(USER_ROLES.USER), UserController.dailyPreview)
+router.route("/delete").delete(auth(USER_ROLES.ADMIN, USER_ROLES.USER), UserController.deleteUser)
 
 router
   .route('/create')

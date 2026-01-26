@@ -23,7 +23,7 @@ const createModel = async (user: JwtPayload, modelData: IModel) => {
 
 
 const getModels = async (query: any) => {
-    const models = Model.find()
+    const models = Model.find().populate({ path: "categoryId", select: "name _id" }).lean()
     const queryBuilder = new QueryBuilder(models, query)
     const result = await queryBuilder.search(searchModel).filter().sort().paginate()
 

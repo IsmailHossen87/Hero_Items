@@ -25,6 +25,7 @@ const userSchema = new Schema<IUser, UserModal>(
     image: { type: String, default: 'https://i.ibb.co/z5YHLV9/profile.png', },
     bio: { type: String, default: '', },
     // FOLLOWERS
+    isFollowing: { type: Boolean, default: false },
     followers: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
     // FOLLOWING
     following: [
@@ -48,6 +49,8 @@ const userSchema = new Schema<IUser, UserModal>(
       expireAt: { type: Date, default: null },
     },
     verified: { type: Boolean, default: false, },
+    address: { type: String, default: '', },
+    fcmToken: { type: String, default: '', },
   },
   { timestamps: true, versionKey: false }
 );
@@ -68,19 +71,8 @@ userSchema.statics.isMatchPassword = async (
   return await bcrypt.compare(password, hashPassword);
 };
 
-// pre-save hook
-userSchema.pre('save', async function (next) {
-  const isExist = await User.findOne({ email: this.email });
-  if (isExist) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
-  }
 
-  this.password = await bcrypt.hash(
-    this.password,
-    Number(config.bcrypt_salt_rounds)
-  );
-  next();
-});
+
 
 export const User = model<IUser, UserModal>('User', userSchema);
 
