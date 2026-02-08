@@ -1,7 +1,7 @@
 import { USER_ROLES } from "../../../enums/user"
 import { sendFirebaseNotification } from "../../../shared/sendNotification"
 import { QueryBuilder } from "../../../util/QueryBuilder"
-import { NOTIFICATION_TYPE } from "../notification/notification.interface"
+import { IReferenceType, NOTIFICATION_TYPE } from "../notification/notification.interface"
 import { sendReaujableNotification } from "../notification/notification.model"
 import { saveNotification } from "../notification/sharedNotification"
 import { syncUserRank } from "../user/syncUserRank"
@@ -11,12 +11,15 @@ import { ICar, IStatus, searchableFields } from "./car.interface"
 import { Car } from "./car.model"
 
 const createCar = async (payload: ICar) => {
-    const { images, ...rest } = payload
-    const user = await User.findById(rest.userId)
+
+    const user = await User.findById(payload.userId)
     if (!user) {
         throw new Error("User not found")
     }
-    const car = await Car.create(rest)
+    if (user.role !== USER_ROLES.USER) {
+        throw new Error("You are not authorized to create a car")
+    }
+    const car = await Car.create(payload)
     //   send notification 🔔🔔🔔🔔🔔
     // sendReaujableNotification({
     //     fcmToken: user?.fcmToken,
@@ -35,7 +38,8 @@ const createCar = async (payload: ICar) => {
         type: NOTIFICATION_TYPE.CREATE_CAR,
         notificationType: "NOTIFICATION",
         status: "SUCCESS",
-        carId: car.id,
+        referenceType: IReferenceType.CAR,
+        referenceId: car.id,
         senderId: payload.userId,
         receiverId: payload.userId,
     }
@@ -62,6 +66,8 @@ const getAllCars = async (query: any) => {
 
     return { meta, data }
 }
+
+
 const SpecificCategoryCars = async (query: any, categoryId: string) => {
     // await syncCarFieldsFromCategory();
     const queryBuilder = new QueryBuilder(Car.find({ category: categoryId }).populate({ "path": "userId", "select": "name" }), query)
@@ -124,6 +130,7 @@ const carDetails = async (carId: string,) => {
         {
             battleCost: (car.category as any)?.battleCost ?? 0,
             Reward: (car.category as any)?.Reward ?? 0,
+            credit: (car.category as any)?.credit ?? 0,
             categoryName: (car.category as any)?.name ?? ""
         },
         { new: true }
@@ -160,8 +167,8 @@ const changeStatus = async (carId: string, userId: string) => {
         status = IStatus.APPROVED
     } else if (CarInfo.status === IStatus.APPROVED) {
         status = IStatus.REJECTED
-    } else {
-        status = IStatus.PENDING
+    } else if (CarInfo.status === IStatus.REJECTED) {
+        status = IStatus.APPROVED
     }
     await syncCarFieldsFromCategory({ _id: carId });
 
@@ -175,21 +182,23 @@ const changeStatus = async (carId: string, userId: string) => {
     //     carId: carId,
     //     senderId: userId,
     //     receiverId: carOwner?.id,
-    //     image: CarInfo?.images[0],
+    //     image: CarInfo?.images?.[0]?.startsWith("http")
+    //         ? CarInfo.images[0]
+    //         : undefined,
     // })
 
-    const valueForNotification = {
-        title: "Car Status Changed",
-        body: "Your car status has been changed to",
-        type: NOTIFICATION_TYPE.CAR_APPROVED,
-        notificationType: "NOTIFICATION",
-        status: "SUCCESS",
-        senderId: userId,
-        carId: carId,
-        receiverId: carOwner?.id,
-    }
-    saveNotification(valueForNotification)
-    // 🔔🔔🔔🔔
+    // const valueForNotification = {
+    //     title: "Car Status Changed",
+    //     body: "Your car status has been changed to",
+    //     type: NOTIFICATION_TYPE.CAR_APPROVED,
+    //     notificationType: "NOTIFICATION",
+    //     referenceType: IReferenceType.CAR,
+    //     status: "SUCCESS",
+    //     senderId: userId,
+    //     referenceId: carId,
+    //     receiverId: carOwner?.id,
+    // }
+    // await saveNotification(valueForNotification)
 
     return car
 }

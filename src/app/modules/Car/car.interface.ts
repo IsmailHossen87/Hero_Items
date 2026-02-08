@@ -24,11 +24,10 @@ export interface ICar {
     isDeleted: boolean,
     status: IStatus
     ranking: number,
-    battleCost: number,
+    credit: number,
     modelDescription: string,
-    Reward: number,
+    earnPoints: number,
     votes: number,
-    votersIds: Types.ObjectId[],
     Top: number,
     createdAt: Date;
     updatedAt: Date;

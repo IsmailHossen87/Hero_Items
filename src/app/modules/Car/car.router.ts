@@ -11,8 +11,6 @@ router.route("/create")
     .post(auth(USER_ROLES.USER), fileUploadHandler(), parseMultipleFilesdata("image"), carController.createCar)
 
 
-
-
 router.route("/all-car")
     .get(carController.getAllCars)
 

@@ -36,8 +36,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
       "Please verify your account, then try to login again"
     );
   }
-
-  const isMatch = await User.isMatchPassword(password, isExistUser.password);
+  const isMatch = await bcrypt.compare(password, isExistUser.password);
   if (!isMatch) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Password is incorrect!");
   }
@@ -54,14 +53,6 @@ const loginUserFromDB = async (payload: ILoginData) => {
     { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email },
     config.jwt.jwt_secret as Secret,
     config.jwt.jwt_refresh_in
-  );
-
-  // Store refresh token in Redis with expiration
-  const refreshTokenExpiry = 7 * 24 * 60 * 60; // 7 days in seconds
-  await redisClient.setEx(
-    `refreshToken:${isExistUser._id}`,
-    refreshTokenExpiry,
-    refreshToken
   );
 
   return {
@@ -231,13 +222,16 @@ const resendOtpToDB = async (email: string) => {
 const verifyEmailToDB = async (payload: IVerifyEmail) => {
   const { email, otp } = payload;
 
-  const isExistUser = await User.findOne({ email }).select('+authentication');
+  const isExistUser = await User.findOne({ email });
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   // Redis OTP check (both for verify and forget)
   const redisVerifyKey = `otp:verify:${email}`;
+  console.log("redisVerifyKey", redisVerifyKey)
+
+
   const redisResetKey = `otp:reset:${email}`;
 
   let storedOTP = await redisClient.get(redisVerifyKey);
@@ -416,17 +410,21 @@ const changePasswordToDB = async (
   }
 
   const isExistUser = await User.findById(user.id).select('+password');
+
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  const isMatch = await User.isMatchPassword(
-    currentPassword,
-    isExistUser.password
-  );
+  // ✅ FIX HERE
+  const isMatch = await isExistUser.isMatchPassword(currentPassword);
+
   if (!isMatch) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Current password is incorrect.');
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Current password is incorrect.'
+    );
   }
+
 
   if (currentPassword === newPassword) {
     throw new AppError(

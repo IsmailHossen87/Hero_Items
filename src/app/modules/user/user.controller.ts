@@ -13,7 +13,7 @@ const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { ...userData } = req.body;
 
-    const result = await UserService.createUserToDB(userData);
+    const result = await UserService.createUUserToDB(userData);
 
     sendResponse(res, {
       success: true,
@@ -113,7 +113,7 @@ const dailyClaim = catchAsync(async (req: Request, res: Response) => {
     success: result.success,
     statusCode: StatusCodes.OK,
     message: result.message,
-    data: { coins: result.coins }
+    data: { credit: result.credit }
   });
 });
 

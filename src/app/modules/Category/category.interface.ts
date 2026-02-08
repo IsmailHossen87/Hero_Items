@@ -13,10 +13,11 @@ export interface ICategory {
     description: string,
     isDeleted: boolean,
     voteStatus: boolean,
-    battleCost: number, //COINS
-    Reward: number,
+    credit: number,
     totalCar: number,
     createdAt: Date,
     updatedAt: Date,
     _id: string
 }
+
+

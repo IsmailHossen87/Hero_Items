@@ -8,6 +8,9 @@ import './app/config/Passport';
 import passport from 'passport';
 import expressSession from 'express-session';
 import { Morgan } from './shared/morgen';
+import cron from "node-cron";
+import { closeBattleCron, startBattleCron } from './app/modules/battle/battleCron';
+
 
 const app = express();
 app.use(passport.initialize());
@@ -26,7 +29,7 @@ app.use(Morgan.errorHandler);
 //body parser
 app.use(cors(
   {
-    origin: ["http://localhost:3000", "http://localhost:3002", "http://localhost:3003"],
+    origin: ["http://10.10.7.37:3000", "http://10.10.7.37:3001", "http://10.10.7.37:3002", "https://hero-itens-admin-dashboard.vercel.app"],
     credentials: true,
   }
 ));
@@ -54,6 +57,9 @@ app.get('/', (req: Request, res: Response) => {
   );
 });
 
+
+startBattleCron();
+closeBattleCron();
 //global error handle
 app.use(globalErrorHandler);
 

@@ -1,5 +1,6 @@
 node_modules
 .env
+.src/app/config/mygarage-25bc8-firebase-adminsdk-fbsvc-065ddb54fe.json
 
 /winston
 /uploads

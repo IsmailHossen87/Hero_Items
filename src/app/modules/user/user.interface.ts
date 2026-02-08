@@ -13,8 +13,6 @@ export type IUser = {
   email: string;
   password: string;
   image?: string;
-  coin: number;
-  point: number;
   bio?: string;
   ranking: number;
 
@@ -27,10 +25,15 @@ export type IUser = {
   status: 'Active' | 'Blocked';
   verified: boolean;
   auths: IAuthProvider[];
-  createdAt?: Date;
-  updatedAt?: Date;
-  lastDailyReward: Date;
+
+
+  dailyCredit: number;
+  moneyCredit: number;
+  coin: number;
   dailyRewardPending: number;
+  lastDailyReward: Date;
+  dailyVoteCount: number;
+  lastVoteDate: Date;
 
   authentication?: {
     isResetPassword: boolean;
@@ -39,12 +42,8 @@ export type IUser = {
   };
 
   address?: string;
-  // user.model.ts
-  dailyVoteCount: number,
-  lastVoteDate: Date,
   fcmToken?: string;
-
-
+  isMatchPassword(password: string): Promise<boolean>;
 };
 
 export type UserModal = {

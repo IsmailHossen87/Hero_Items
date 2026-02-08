@@ -1,6 +1,7 @@
 import AppError from "../../../errors/AppError";
 import unlinkFile from "../../../shared/unlinkFile";
 import { QueryBuilder } from "../../../util/QueryBuilder";
+import { Car } from "../Car/car.model";
 import { User } from "../user/user.model";
 import { searchableFieldsForCategory } from "./category.interface";
 import { Category } from "./category.model";
@@ -56,15 +57,22 @@ const deleteCategory = async (id: string, userId: string) => {
     if (user.role !== "ADMIN") {
         throw new Error("User is not an admin");
     }
-
-    const category = await Category.findByIdAndDelete(id);
+    const category = await Category.findById(id);
     if (!category) {
         throw new Error("Category not found");
     }
-    if (category.image) {
-        unlinkFile(category.image)
+    const findCategory = await Car.find({ category: id });
+    if (findCategory.length > 0) {
+        throw new AppError(httpStatus.BAD_REQUEST, `Already Used ${category.name} Category`);
     }
-    return category
+    const deletedCategory = await Category.findByIdAndDelete(id);
+    if (!deletedCategory) {
+        throw new Error("Category not found");
+    }
+    if (deletedCategory.image) {
+        unlinkFile(deletedCategory.image)
+    }
+    return deletedCategory
 }
 
 

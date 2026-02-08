@@ -9,7 +9,8 @@ import { JwtPayload } from 'jsonwebtoken';
 // CREATE Category
 const giveVote = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id
-    const category = await RankingService.giveVote(userId as string, req.params.id);
+    const { carId } = req.body
+    const category = await RankingService.giveVote(userId as string, req.params.id, carId as string);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -17,6 +18,8 @@ const giveVote = catchAsync(async (req: Request, res: Response, next: NextFuncti
         data: category
     });
 });
+
+
 
 // vut history
 const getVutHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

@@ -12,13 +12,9 @@ const createCategoryZodSchema = z.object({
             required_error: "Description is required",
             invalid_type_error: "Description must be a string"
         }),
-        Reward: z.number({
-            required_error: "Reward is required",
-            invalid_type_error: "Reward must be a number"
-        }),
-        battleCost: z.number({
-            required_error: "Battle cost is required",
-            invalid_type_error: "Battle cost must be a number"
+        credit: z.number({
+            required_error: "credit is required",
+            invalid_type_error: "credit must be a number"
         })
     })
 });
@@ -31,11 +27,8 @@ const updateCategoryZodSchema = z.object({
         description: z.string({
             invalid_type_error: "Description must be a string"
         }).optional(),
-        Reward: z.number({
-            invalid_type_error: "Reward must be a number"
-        }).optional(),
-        battleCost: z.number({
-            invalid_type_error: "Battle cost must be a number"
+        credit: z.number({
+            invalid_type_error: "credit must be a number"
         }).optional()
     })
 });

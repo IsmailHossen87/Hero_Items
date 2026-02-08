@@ -4,7 +4,9 @@ import { excludeField } from "./Constant";
 
 export class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
-  public readonly query: Record<string, string>;
+  public readonly query: Record<string, string>  // { sort: 'price', page: '2' }
+
+  // searchTerm=beach&sort=price&limit=5&page=2&fields=name,price
 
   constructor(modelQuery: Query<T[], T>, query: Record<string, string>) {
     this.modelQuery = modelQuery;
@@ -15,26 +17,38 @@ export class QueryBuilder<T> {
   search(searchableField: string[]): this {
     const searchTerm = this.query.searchTerm?.trim();
     console.log("searchTerm", searchTerm);
-
     if (searchTerm) {
-      const searchQuery = {
+      const searchQuery: FilterQuery<T> = {
         $or: searchableField.map((field) => ({
           [field]: { $regex: searchTerm, $options: "i" },
-        })),
+        })) as FilterQuery<T>[],
       };
-      this.modelQuery = this.modelQuery.find(searchQuery as FilterQuery<T>);
+
+      this.modelQuery = this.modelQuery.find(searchQuery);
     }
+
     return this;
   }
 
   // 🧩 Filter
   filter(): this {
     const filter = { ...this.query };
-    for (const field of excludeField) delete filter[field];
-    this.modelQuery = this.modelQuery.find(filter as FilterQuery<T>);
+    console.log("filter before cleanup:", filter);
+
+    // excludeField গুলো remove করুন
+    for (const field of excludeField) {
+      delete filter[field];
+    }
+
+    console.log("filter after cleanup:", filter);
+
+    // শুধু যদি filter object এ কিছু থাকে তাহলেই apply করুন
+    if (Object.keys(filter).length > 0) {
+      this.modelQuery = this.modelQuery.find(filter as FilterQuery<T>);
+    }
+
     return this;
   }
-
   limit(): this {
     const limit = this.query.limit;
     this.modelQuery = this.modelQuery.limit(Number(limit));

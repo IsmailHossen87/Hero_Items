@@ -32,7 +32,7 @@ export const isSameDay = (date1: Date, date2: Date) => {
 
 
 
-const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
+const createUUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   let createUser;
   const { email, password } = payload;
   if (email && password) {
@@ -41,15 +41,25 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
       providerId: '',
     }];
     const passwordHash = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
-    createUser = await User.create({ auths, password: passwordHash, ...payload });
+    const data = {
+      ...payload,
+      auths,
+      password: passwordHash
+    }
+
+    createUser = await User.create(data);
   }
+
 
   if (!createUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
-
   const otp = generateNumber();
   const redisKey = `otp:verify:${createUser.email}`;
+
+  console.log("redisKey-------------1", redisKey)
+
+
   await redisClient.setEx(redisKey, OTP_EXPIRATION, otp.toString());
 
   const values = {
@@ -60,28 +70,6 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
 
   const createAccountTemplate = emailTemplate.createAccount(values);
   await emailHelper.sendEmail(createAccountTemplate);
-
-  // let stripeCustomer;
-  // try {
-  //   stripeCustomer = await stripe.customers.create({
-  //     email: createUser.email,
-  //     name: createUser.name,
-  //   });
-  // } catch (error) {
-  //   throw new AppError(
-  //     StatusCodes.INTERNAL_SERVER_ERROR,
-  //     'Failed to create Stripe customer'
-  //   );
-  // }
-
-  // await User.findOneAndUpdate(
-  //   { _id: createUser._id },
-  //   {
-  //     $set: {
-  //       stripeAccountInfo: { stripeCustomerId: stripeCustomer.id }
-  //     }
-  //   }
-  // )
 
   return createUser;
 };
@@ -131,14 +119,13 @@ const updateProfileToDB = async (
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
-  //unlink file here
-  if (payload.image) {
-    unlinkFile(isExistUser.image);
-  }
 
   const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
     new: true,
   });
+  if (payload.image && isExistUser.image) {
+    unlinkFile(isExistUser.image);
+  }
 
   return updateDoc;
 };
@@ -239,21 +226,22 @@ const claimDailyReward = async (userId: string) => {
     return {
       success: false,
       message: "Already claimed today",
-      coins: user.coin
+      credit: user.dailyCredit
     };
   }
 
   // Add pending coins to actual coins
   const reward = user.dailyRewardPending || 100;
-  user.coin += reward;
+
+  user.dailyCredit += reward;
   user.lastDailyReward = today;
-  user.dailyRewardPending = 0; // reset pending
+  user.dailyRewardPending = 0;
   await user.save();
 
   return {
     success: true,
     message: `You claimed ${reward} coins 🎉`,
-    coins: user.coin
+    credit: user.dailyCredit
   };
 };
 
@@ -328,7 +316,7 @@ const userDeleteFunc = async (userId: string) => {
 
 
 export const UserService = {
-  createUserToDB,
+  createUUserToDB,
   getUserProfileFromDB,
   getAllUser,
   updateProfileToDB,

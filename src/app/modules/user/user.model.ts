@@ -1,10 +1,8 @@
 import bcrypt from 'bcrypt';
-import { StatusCodes } from 'http-status-codes';
 import { model, Schema } from 'mongoose';
-import config from '../../../config';
 import { USER_ROLES } from '../../../enums/user';
 // import AppError from '../../../errors/AppError'; 
-import AppError from '../../../errors/AppError';
+
 
 import { IAuthProvider, IUser, UserModal } from './user.interface';
 
@@ -22,9 +20,20 @@ const userSchema = new Schema<IUser, UserModal>(
     contact: { type: String, default: '', },
     password: { type: String, required: true, select: 0, minlength: 8, },
     auths: [authProviderSchema],
-    image: { type: String, default: 'https://i.ibb.co/z5YHLV9/profile.png', },
+    image: { type: String },
     bio: { type: String, default: '', },
-    // FOLLOWERS
+
+    dailyCredit: { type: Number, default: 0, },
+    moneyCredit: { type: Number, default: 0, },
+    coin: { type: Number },
+
+    ranking: { type: Number },
+    dailyRewardPending: { type: Number, default: 0 },
+    dailyVoteCount: { type: Number, default: 0 },
+    lastVoteDate: { type: Date },
+    lastDailyReward: { type: Date },
+    status: { type: String, enum: ['Active', 'Blocked'], default: 'Active', },
+
     isFollowing: { type: Boolean, default: false },
     followers: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
     // FOLLOWING
@@ -35,14 +44,6 @@ const userSchema = new Schema<IUser, UserModal>(
     followingCount: { type: Number, default: 0 },
 
 
-    coin: { type: Number, default: 0, },
-    point: { type: Number, default: 0, },
-    ranking: { type: Number, default: 0, },
-    lastDailyReward: { type: Date, default: null, },
-    dailyRewardPending: { type: Number, default: 0 },
-    dailyVoteCount: { type: Number, default: 0 },
-    lastVoteDate: { type: Date },
-    status: { type: String, enum: ['Active', 'Blocked'], default: 'Active', },
     authentication: {
       isResetPassword: { type: Boolean, default: false },
       otp: { type: Number, default: null },
@@ -63,12 +64,11 @@ userSchema.statics.isExistUserByEmail = async (email: string) => {
   return await User.findOne({ email });
 };
 
-// match password
-userSchema.statics.isMatchPassword = async (
-  password: string,
-  hashPassword: string
-): Promise<boolean> => {
-  return await bcrypt.compare(password, hashPassword);
+// In the schema definition
+userSchema.methods.isMatchPassword = async function (
+  password: string
+): Promise<boolean> {
+  return bcrypt.compare(password, this.password);
 };
 
 

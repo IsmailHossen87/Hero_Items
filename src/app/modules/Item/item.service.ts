@@ -10,9 +10,10 @@ import httpStatus from "http-status-codes";
 import { emailHelper } from "../../../helpers/emailHelper";
 import { emailTemplate } from "../../../shared/emailTemplate";
 import generateNumber from "../../../util/generateOTP";
-import { NOTIFICATION_TYPE } from "../notification/notification.interface";
+import { INotification, IReferenceType, NOTIFICATION_TYPE } from "../notification/notification.interface";
 import { saveNotification } from "../notification/sharedNotification";
 import { sendReaujableNotification } from "../notification/notification.model";
+
 
 export interface IItemPurchase {
     name: string;
@@ -59,7 +60,11 @@ const getAllItem = async (query: any, allItem?: boolean) => {
         result.build(),
     ]);
 
-    return { meta, AllItemsLength, avtiveItemsLength, inactiveItemsLength, data, };
+    // return { ...meta, AllItemsLength, avtiveItemsLength, inactiveItemsLength, data };
+    return {
+        meta: { ...meta, AllItemsLength, avtiveItemsLength, inactiveItemsLength }, data
+    };
+
 };
 
 
@@ -141,24 +146,25 @@ const buyItem = async (id: string, user: JwtPayload) => {
             item.save({ session })
         ]);
 
-        // sendReaujableNotification({
-        //     fcmToken: userInfo.fcmToken,
-        //     title: "Item Purchased",
-        //     body: "You have purchased an item",
-        //     type: NOTIFICATION_TYPE.BUY_ITEM,
-        //     carId:"",
-        //     senderId: user.id,
-        //     receiverId: userInfo.id,
-        //     image:item?.image as string,
-        // })
-
+        sendReaujableNotification({
+            fcmToken: userInfo.fcmToken,
+            title: "Item Purchased",
+            body: "You have purchased an item",
+            type: NOTIFICATION_TYPE.BUY_ITEM,
+            carId: "",
+            senderId: user.id,
+            receiverId: userInfo.id,
+            image: item?.image as string,
+        })
+        // 🫙🫙🫙🫙
         const valueForNotification = {
             title: "Item Purchased",
             body: "You have purchased an item",
             type: NOTIFICATION_TYPE.BUY_ITEM,
             notificationType: "NOTIFICATION",
             status: "SUCCESS",
-            itemId: item.id,
+            referenceId: item.id,
+            referenceType: IReferenceType.ITEM,
             senderId: user.id,
             receiverId: item.userId,
         }
@@ -170,7 +176,7 @@ const buyItem = async (id: string, user: JwtPayload) => {
             timeStyle: 'short'
         });
 
-        const otp = generateNumber(8)
+        // const otp = generateNumber(8)
 
         // const customerEmailData = {
         //     name: userInfo.name,
@@ -201,7 +207,7 @@ const buyItem = async (id: string, user: JwtPayload) => {
         //     console.error("Email sending failed:", error);
         // });
 
-        return otp;
+        // return otp;
 
     } catch (error) {
         console.error("Purchase failed:", error);

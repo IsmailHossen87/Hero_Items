@@ -5,15 +5,15 @@ const websiteLogo = "https://i.postimg.cc/8C3qdnNC/fe8f54bc27306daa2de1fb8b0c278
 const createAccount = (values: { name: string; email: string; otp: number }) => {
   const data = {
     to: values.email,
-    subject: 'Verify your Fundraising Account',
+    subject: 'Verify your Hero Items Account',
     html: `<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 50px; padding: 20px; color: #555;">
       <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-          <img src="${websiteLogo}" alt="FundRaise Logo" style="display: block; margin: 0 auto 20px; width:150px" />
-          <h2 style="color: #277E16; font-size: 24px; margin-bottom: 20px;">Hello ${values.name}, Welcome to FundRaise!</h2>
+          <img src="${websiteLogo}" alt="Hero Items Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+          <h2 style="color: #277E16; font-size: 24px; margin-bottom: 20px;">Hello ${values.name}, Welcome to Hero Items!</h2>
           <div style="text-align: center;">
               <p style="color: #555; font-size: 10px; line-height: 1.5; padding: 10px; margin-bottom: 20px;">Your verification code is:</p>
               <div style="background-color: #277E16; width: 80px; padding: 10px; text-align: center; border-radius: 8px; color: #fff; font-size: 25px; letter-spacing: 2px; margin: 20px auto;">${values.otp}</div>
-              <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">This code is valid for 3 minutes. Use it to verify your fundraising account and start your campaign.</p>
+              <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">This code is valid for 3 minutes. Use it to verify your Hero Items Account and start your campaign.</p>
           </div>
           <p style="color: #555; font-size: 14px; line-height: 1.5;">If you did not request this, please ignore this email.</p>
       </div>
@@ -29,7 +29,7 @@ const resetPassword = (values: IResetPassword) => {
     subject: 'Reset your password',
     html: `<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 50px; padding: 20px; color: #555;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <img src="${websiteLogo}" alt="Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+        <img src="${websiteLogo}" alt="Hero Items Logo" style="display: block; margin: 0 auto 20px; width:150px" />
         <div style="text-align: center;">
             <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Your single use code is:</p>
             <div style="background-color: #277E16; width: 80px; padding: 10px; text-align: center; border-radius: 8px; color: #fff; font-size: 25px; letter-spacing: 2px; margin: 20px auto;">${values.otp}</div>
@@ -45,18 +45,18 @@ const resetPassword = (values: IResetPassword) => {
 const resendOtpTemplate = (values: { otp: string | number; email: string }) => {
   return {
     to: values.email,
-    subject: "Your OTP Code - My Garage Verification",
+    subject: "Your OTP Code - Hero Items Verification",
     html: `
       <body style="font-family: Arial; background:#f6f6f6; padding:20px;">
         <div style="max-width:600px; margin:auto; background:white; padding:25px; border-radius:10px;">
           
           <div style="text-align:center;">
-            <img src="${websiteLogo}" alt="My Garage Logo" style="width:140px;" />
+            <img src="${websiteLogo}" alt="Hero Items Logo" style="width:140px;" />
           </div>
 
           <h2 style="color:#277E16; text-align:center;">Your Resent OTP Code</h2>
 
-          <p style="text-align:center;">Use the code below to continue verifying your My Garage account.</p>
+          <p style="text-align:center;">Use the code below to continue verifying your Hero Items account.</p>
 
           <div style="text-align:center; margin:25px 0;">
             <div style="display:inline-block; background:#277E16; color:white; padding:15px 25px; border-radius:8px; font-size:28px; font-weight:bold; letter-spacing:3px;">

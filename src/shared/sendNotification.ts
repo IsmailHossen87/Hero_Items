@@ -1,5 +1,6 @@
 import { firebaseAdmin } from "../app/middlewares/firebaseAdmin";
 
+
 export const sendFirebaseNotification = async (
     token: string,
     title: string,
@@ -11,7 +12,6 @@ export const sendFirebaseNotification = async (
 
     await firebaseAdmin.messaging().send({
         token,
-        notification: { title, body, imageUrl },
-        data,
+        data: { title, body, image: imageUrl || "" },
     });
 };

@@ -10,6 +10,7 @@ import { DashboardRouter } from '../app/modules/Dashboard/dashboard.router';
 import { SettingRouter } from '../app/modules/Setting/setting.router';
 import { ModelRoutes } from '../app/modules/model/model.router';
 import { notificationRouter } from '../app/modules/notification/notification.router';
+import { battleRouter } from '../app/modules/battle/battle.router';
 
 
 const router = express.Router();
@@ -53,6 +54,10 @@ const apiRoutes = [
   {
     path: '/model',
     route: ModelRoutes
+  },
+  {
+    path: '/battle',
+    route: battleRouter
   },
   {
     path: '/notification',

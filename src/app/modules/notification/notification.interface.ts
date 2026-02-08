@@ -5,12 +5,16 @@ export enum NOTIFICATION_TYPE {
     BUY_ITEM = 'BUY_ITEM',
     CAR_APPROVED = 'CAR_APPROVED',
 }
-
+export enum IReferenceType {
+    CAR = 'Car',
+    ITEM = 'Item',
+}
 // notification.interface.ts
 export interface INotification {
     senderId: Types.ObjectId;
     receiverId: Types.ObjectId;
-    itemId?: Types.ObjectId;
+    referenceId?: Types.ObjectId;
+    referenceType?: IReferenceType;
     title?: string;
     body: string;
     read: boolean;

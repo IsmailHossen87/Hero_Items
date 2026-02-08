@@ -20,16 +20,30 @@ const sendNotification = catchAsync(async (req: Request, res: Response, next: Ne
 
 const getAllNotification = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const query = req.query
-    const result = await NotificationService.getAllNotification(query)
+    const user = req.user
+    const result = await NotificationService.getAllNotification(query, user)
 
     res.status(200).json({
         success: true,
-        message: "User created successfully",
+        message: "Notification fetched successfully",
+        data: result
+    })
+})
+
+
+const deleteNotification = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params
+    const result = await NotificationService.deleteNotification(id)
+
+    res.status(200).json({
+        success: true,
+        message: "Notification deleted successfully",
         data: result
     })
 })
 
 export const NotificationController = {
     sendNotification,
-    getAllNotification
+    getAllNotification,
+    deleteNotification
 }

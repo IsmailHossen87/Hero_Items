@@ -32,8 +32,8 @@ const getAllItem = catchAsync(async (req: Request, res: Response, next: NextFunc
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Item fetched successfully',
+        data: items.data,
         meta: items.meta,
-        data: items.data
     });
 })
 
@@ -50,6 +50,18 @@ const ItemDetails = catchAsync(async (req: Request, res: Response, next: NextFun
         data: item
     });
 })
+// const statusChange = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+//     const { id } = req.params;
+//     const status = req.query.status === "true";
+//     const user = req.user;
+//     const item = await ItemService.statusChange(id, status as boolean, user as JwtPayload);
+//     sendResponse(res, {
+//         statusCode: StatusCodes.OK,
+//         success: true,
+//         message: 'Item status changed successfully',
+//         data: item
+//     });
+// })
 
 
 const buyItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
