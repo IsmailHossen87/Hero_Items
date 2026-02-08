@@ -11,6 +11,7 @@ import { SettingRouter } from '../app/modules/Setting/setting.router';
 import { ModelRoutes } from '../app/modules/model/model.router';
 import { notificationRouter } from '../app/modules/notification/notification.router';
 import { battleRouter } from '../app/modules/battle/battle.router';
+import { tireRouter } from '../app/modules/tire/tire.router';
 
 
 const router = express.Router();
@@ -62,6 +63,10 @@ const apiRoutes = [
   {
     path: '/notification',
     route: notificationRouter
+  },
+  {
+    path: '/tire',
+    route: tireRouter
   }
 ];
 

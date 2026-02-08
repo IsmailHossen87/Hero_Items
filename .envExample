@@ -32,8 +32,8 @@ EMAIL_PORT=587
 EMAIL_PASS=xxhbvmkweovttswk
 
 
-STRIPE_SUCCESS_URL=http://10.10.7.23:5000/api/v1/payment/success
-STRIPE_CANCLE_URL=http://10.10.7.23:5000/api/v1/payment/cancel
+STRIPE_SUCCESS_URL=http://10.10.7.104:4001/api/v1/payment/success
+STRIPE_CANCLE_URL=http://10.10.7.104:4001/api/v1/payment/cancel
 STRIPE_SECRET_KYE=sk_test_51SI1PyEIbyqsKVRQdYV3bJtI3ijN4L2onOGmdNvTlyx465Jcpgv5H0OHfCFZvCJ9FXnZIIiQsQoY0cRByAyKS5GO00jwtB6C6U
 STRIPE_WEBHOOK_SECRET=whsec_a20d3a32a4ca5f1ee28b01bcbb0109a5adea9b34357638559b6bcdadd1200b38 
 

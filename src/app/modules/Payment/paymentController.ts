@@ -4,41 +4,33 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { createPaymentService } from "./PaymentService";
 
-const createPaymentIntentRaffle = catchAsync(async (req: Request, res: Response) => {
-  const raffleId = req.params.id;
-  const { ticket, firstName, surName, email, message } = req.body;
-
-  const paymentSession = await createPaymentService.createPaymentIntent(
-    raffleId,
-    ticket,
-    { firstName, surName, email, message }
-  );
-
+const buyMoneyCredits = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const paymentSession = await createPaymentService.createPaymentIntent(req.params.id, userId)
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Redirect to payment",
-    data: paymentSession,
+    data: paymentSession
   });
 });
 
-// Charity
-const createPaymentIntentCause = catchAsync(async (req: Request, res: Response) => {
-  const causeId = req.params.id;
-  const { totalAmount, firstName,email, surName, message } = req.body;
-
-  const paymentSession = await createPaymentService.createPaymentIntentCarity(
-    causeId,
-    totalAmount,
-    { firstName, surName,email,message }
-  );
-
+const paymentSuccess = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Redirect to Donation",
-    data: paymentSession,
+    message: "Payment success",
   });
 });
 
-export const PaymentController = { createPaymentIntentRaffle,createPaymentIntentCause };
+const paymentCancel = catchAsync(async (req: Request, res: Response) => {
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Payment cancel",
+  });
+});
+
+
+
+export const PaymentController = { buyMoneyCredits, paymentSuccess, paymentCancel };
