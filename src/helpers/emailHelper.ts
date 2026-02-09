@@ -6,7 +6,7 @@ import { ISendEmail } from '../types/email';
 const transporter = nodemailer.createTransport({
   host: config.email.host,
   port: Number(config.email.port),
-  secure: false, 
+  secure: false,
   auth: {
     user: config.email.user,
     pass: config.email.pass,
@@ -17,15 +17,15 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (values: ISendEmail) => {
   try {
     const info = await transporter.sendMail({
-      from: `"FundRaise Platform" <${config.email.from}>`,
+      from: `"Hero Items" <${config.email.from}>`,
       to: values.to,
       subject: values.subject,
       html: values.html,
     });
 
-    logger.info('Fundraising OTP email sent successfully to:', values.to, info.accepted);
+    logger.info('Hero Items email sent successfully to:', values.to, info.accepted);
   } catch (error) {
-    errorLogger.error('Fundraising Email Error:', error);
+    errorLogger.error('Hero Items Email Error:', error);
   }
 };
 

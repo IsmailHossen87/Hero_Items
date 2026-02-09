@@ -28,8 +28,8 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     if ((user.dailyCredit + user.moneyCredit) < car.credit) throw new AppError(StatusCodes.BAD_REQUEST, "Not enough credit,Please Buy Credit");
 
     // 6️⃣ Load admin settings
-    const settings = await Setting.findOne();
-    const dailyLimit = settings?.voteLimit ?? 0;
+    // const settings = await Setting.findOne();
+    // const dailyLimit = settings?.voteLimit ?? 0;
 
     const today = new Date();
 
@@ -39,7 +39,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     }
 
     // 8️⃣ Check daily vote limit
-    if (user.dailyVoteCount >= dailyLimit) throw new AppError(StatusCodes.BAD_REQUEST, "Daily vote limit exceeded");
+    // if (user.dailyVoteCount >= dailyLimit) throw new AppError(StatusCodes.BAD_REQUEST, "Daily vote limit exceeded");
 
     // 9️⃣ Vote success → update ranking
     await updateRanking(user, car);
@@ -114,7 +114,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     // 13️⃣ Return response
     return {
         message: "Vote given successfully",
-        remainingVote: dailyLimit - user.dailyVoteCount,
+        // remainingVote: dailyLimit - user.dailyVoteCount,
     };
 };
 

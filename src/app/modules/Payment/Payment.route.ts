@@ -7,8 +7,7 @@ import { PaymentController } from "./paymentController"
 
 const router = Router()
 
-router.route("/buy-credit/:id")
-    .post(auth(USER_ROLES.USER), PaymentController.buyMoneyCredits)
+router.route("/buy-credit/:id").post(auth(USER_ROLES.USER), PaymentController.buyMoneyCredits)
 
 router.get('/success', PaymentController.paymentSuccess);
 router.get('/cancel', PaymentController.paymentCancel);

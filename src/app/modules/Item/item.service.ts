@@ -114,9 +114,7 @@ const buyItem = async (id: string, user: JwtPayload) => {
 
         // 2️⃣ Validate User
         const userInfo = await User.findById(user.id).session(session);
-        if (!userInfo) {
-            throw new AppError(httpStatus.NOT_FOUND, "User not found");
-        }
+        if (!userInfo) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
         // 3️⃣ Check Authorization
         if (item.userId === userInfo.id) {
@@ -139,7 +137,7 @@ const buyItem = async (id: string, user: JwtPayload) => {
 
         // 5️⃣ Process Purchase
         userInfo.coin -= pointCost;
-        item.userId = user.id;
+        item.buyerId.push(user.id);
 
         await Promise.all([
             userInfo.save({ session }),
@@ -156,35 +154,19 @@ const buyItem = async (id: string, user: JwtPayload) => {
             receiverId: userInfo.id,
             image: item?.image as string,
         })
-        // 🫙🫙🫙🫙
-        const valueForNotification = {
-            title: "Item Purchased",
-            body: "You have purchased an item",
-            type: NOTIFICATION_TYPE.BUY_ITEM,
-            notificationType: "NOTIFICATION",
-            status: "SUCCESS",
-            referenceId: item.id,
-            referenceType: IReferenceType.ITEM,
-            senderId: user.id,
-            receiverId: item.userId,
-        }
-        saveNotification(valueForNotification)
 
         // 6️⃣ Send Emails (after successful transaction)
-        const purchaseDate = new Date().toLocaleString('en-US', {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-        });
+        const purchaseDate = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
         // const otp = generateNumber(8)
 
-        // const customerEmailData = {
-        //     name: userInfo.name,
-        //     email: userInfo.email,
-        //     itemName: item.itemName,
-        //     image: item.image,
-        //     itemPrice: pointCost
-        // } as IItemPurchase;
+        const customerEmailData = {
+            name: userInfo.name,
+            email: userInfo.email,
+            itemName: item.itemName,
+            image: item.image,
+            itemPrice: pointCost
+        } as IItemPurchase;
 
         // const adminEmailData = {
         //     buyerName: userInfo.name,
@@ -194,18 +176,17 @@ const buyItem = async (id: string, user: JwtPayload) => {
         //     itemPrice: pointCost,
         //     purchaseDate: purchaseDate
         // } as ItemPurchaseAdmin;
-
-        // // Send emails (non-blocking)
-        // Promise.all([
-        //     emailHelper.sendEmail(
-        //         emailTemplate.purchaseConfirmationTemplate(customerEmailData)
-        //     ),
-        //     // emailHelper.sendEmail(
-        //     //     emailTemplate.adminPurchaseNotificationTemplate(adminEmailData)
-        //     // )
-        // ]).catch(error => {
-        //     console.error("Email sending failed:", error);
-        // });
+        // Send emails (non-blocking)
+        Promise.all([
+            emailHelper.sendEmail(
+                emailTemplate.purchaseConfirmationTemplate(customerEmailData)
+            ),
+            // emailHelper.sendEmail(
+            //     emailTemplate.adminPurchaseNotificationTemplate(adminEmailData)
+            // )
+        ]).catch(error => {
+            console.error("Email sending failed:", error);
+        });
 
         // return otp;
 

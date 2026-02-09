@@ -8,6 +8,11 @@ const ItemSchema = new mongoose.Schema<IItem>({
         ref: "User",
         required: true
     },
+    buyerId: {
+        type: [Schema.Types.ObjectId],
+        ref: "User",
+        default: []
+    },
     itemName: {
         type: String,
         required: true

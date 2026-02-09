@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 export const searchableFieldsItem = ["itemName", "itemDescription"];
 export interface IItem {
     userId: Types.ObjectId
+    buyerId: Types.ObjectId[];
     itemName: String;
     itemDescription: String;
     pointCost: Number;
@@ -12,5 +13,5 @@ export interface IItem {
     totalItem: Number;
     volume: String;
     formula: String;
-    status: String;
+    status: 'Active' | 'Inactive';
 }
