@@ -43,7 +43,8 @@ const webhookHandler = async (req: Request, res: Response): Promise<void> => {
 
         if (metadata.userId && metadata.tireId) {
           await TransactionService.buyTireTransaction(metadata.userId, metadata.tireId);
-        } else {
+        }
+        else {
           console.log('⚠️ Missing userId or tierId in metadata');
         }
         break;

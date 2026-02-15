@@ -58,17 +58,24 @@ const deleteCategory = catchAsync(async (req: Request, res: Response, next: Next
 });
 
 
-const getAllCategory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const query = req.query;
-    const category = await CategoryService.getAllCategory(query);
-    sendResponse(res, {
-        statusCode: StatusCodes.OK,
-        success: true,
-        message: 'Category fetched successfully',
-        meta: category.meta,
-        data: category.data
-    });
-})
+const getAllCategory = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+
+        const query = req.query; // full query object
+        const { isBattle } = req.query; // optional specific param (if needed)
+
+        const category = await CategoryService.getAllCategory(query);
+
+        sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            message: 'Category fetched successfully',
+            meta: category.meta,
+            data: category.data,
+        });
+    }
+);
+
 
 
 export const CategoryController = {

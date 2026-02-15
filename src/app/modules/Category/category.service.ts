@@ -1,6 +1,7 @@
 import AppError from "../../../errors/AppError";
 import unlinkFile from "../../../shared/unlinkFile";
 import { QueryBuilder } from "../../../util/QueryBuilder";
+import { Battle } from "../battle/battle.model";
 import { Car } from "../Car/car.model";
 import { User } from "../user/user.model";
 import { searchableFieldsForCategory } from "./category.interface";
@@ -10,10 +11,10 @@ import httpStatus from "http-status-codes";
 const createCategory = async (payload: any) => {
     const user = await User.findById(payload.userId);
     if (!user) {
-        throw new Error("User not found");
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
     }
     if (user.role !== "ADMIN") {
-        throw new Error("User is not an admin");
+        throw new AppError(httpStatus.FORBIDDEN, "User is not an admin");
     }
     const category = await Category.create(payload);
     return category
@@ -23,19 +24,19 @@ const createCategory = async (payload: any) => {
 const updateCategory = async (id: string, payload: any) => {
     const category = await Category.findById(id);
     if (!category) {
-        throw new Error("Category not found");
+        throw new AppError(httpStatus.NOT_FOUND, "Category not found");
     }
     const user = await User.findById(payload.userId);
     if (!user) {
-        throw new Error("User not found");
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
     }
 
     if (user.role !== "ADMIN") {
-        throw new Error("User is not an admin");
+        throw new AppError(httpStatus.FORBIDDEN, "User is not an admin");
     }
     const categoryOwner = await Category.find({ userId: user._id });
     if (!categoryOwner) {
-        throw new Error("Category owner not found");
+        throw new AppError(httpStatus.NOT_FOUND, "Category owner not found");
     }
 
     const updatedCategory = await Category.findByIdAndUpdate(id, payload, {
@@ -51,15 +52,15 @@ const updateCategory = async (id: string, payload: any) => {
 const deleteCategory = async (id: string, userId: string) => {
     const user = await User.findById(userId);
     if (!user) {
-        throw new Error("User not found");
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
     }
 
     if (user.role !== "ADMIN") {
-        throw new Error("User is not an admin");
+        throw new AppError(httpStatus.FORBIDDEN, "User is not an admin");
     }
     const category = await Category.findById(id);
     if (!category) {
-        throw new Error("Category not found");
+        throw new AppError(httpStatus.NOT_FOUND, "Category not found");
     }
     const findCategory = await Car.find({ category: id });
     if (findCategory.length > 0) {
@@ -67,7 +68,7 @@ const deleteCategory = async (id: string, userId: string) => {
     }
     const deletedCategory = await Category.findByIdAndDelete(id);
     if (!deletedCategory) {
-        throw new Error("Category not found");
+        throw new AppError(httpStatus.NOT_FOUND, "Category not found");
     }
     if (deletedCategory.image) {
         unlinkFile(deletedCategory.image)
@@ -77,26 +78,48 @@ const deleteCategory = async (id: string, userId: string) => {
 
 
 const getAllCategory = async (query: any) => {
-    const baseQuery = Category.find();
-    const queryBilder = new QueryBuilder(baseQuery, query);
+    const { isBattle, ...restQuery } = query;
 
-    const car = await queryBilder.search(searchableFieldsForCategory)
+    let baseQuery = Category.find();
+
+    if (isBattle === 'true') {
+
+        const battleData = await Battle.find({
+            categoryId: { $ne: null }
+        }).select('categoryId');
+
+        const categoryIds = [
+            ...new Set(
+                battleData.map(item => item.categoryId?.toString())
+            )
+        ];
+
+        baseQuery = Category.find({
+            _id: { $in: categoryIds }
+        });
+    }
+
+    // ✅ QueryBuilder এ isBattle পাঠাচ্ছি না
+    const queryBuilder = new QueryBuilder(baseQuery, restQuery);
+
+    const categoryQuery = queryBuilder
+        .search(searchableFieldsForCategory)
         .filter()
         .sort()
         .limit()
         .paginate();
 
     const [meta, data] = await Promise.all([
-        car.getMeta(),
-        car.build()
-    ])
+        categoryQuery.getMeta(),
+        categoryQuery.build()
+    ]);
+
     if (!data || data.length === 0) {
         throw new AppError(httpStatus.NOT_FOUND, 'No categories found');
     }
-    return { meta, data }
-}
 
-
+    return { meta, data };
+};
 
 
 export const CategoryService = {

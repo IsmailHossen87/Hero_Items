@@ -11,6 +11,9 @@ router.route("/")
     .post(auth(USER_ROLES.ADMIN), fileUploadHandler(), parseFormDataMiddleware, ItemController.createItem)
     .get(ItemController.getAllItem)
 
+router.route("/buy-item-history")
+    .get(auth(USER_ROLES.USER), ItemController.buyItemHistory)
+
 router.route("/:id")
     .get(auth(USER_ROLES.ADMIN, USER_ROLES.USER), ItemController.ItemDetails)
 router.route("/buy-item/:id")

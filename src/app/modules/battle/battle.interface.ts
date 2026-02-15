@@ -5,6 +5,12 @@ export enum BattleStatus {
     COMPLETED = "COMPLETED"
 }
 
+export interface IVoterIds {
+    userId: Types.ObjectId;
+    carId: Types.ObjectId;
+    vote: number;
+}
+
 export interface IBattle {
     car1: Types.ObjectId;
     car2: Types.ObjectId;
@@ -16,8 +22,10 @@ export interface IBattle {
 
     votesCar1: number;
     votesCar2: number;
+    categoryId: Types.ObjectId;
 
     votersIds: Types.ObjectId[];
+    voteTrack: IVoterIds[];
 
     status: BattleStatus;
 

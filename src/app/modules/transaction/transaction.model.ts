@@ -4,11 +4,10 @@ import { ITransaction } from "./transaction.interface";
 // transaction.model.ts
 const transactionSchema = new mongoose.Schema<ITransaction>({
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    amount: {
-        type: Number,
-        required: true
-    },
-    tireId: { type: Schema.Types.ObjectId, ref: 'Tire', required: true },
+    amount: { type: Number },
+    totalCoin: { type: Number },
+    tireId: { type: Schema.Types.ObjectId, ref: 'Tire' },
+    itemId: { type: Schema.Types.ObjectId, ref: 'Item' },
     currency: {
         type: String,
         required: true

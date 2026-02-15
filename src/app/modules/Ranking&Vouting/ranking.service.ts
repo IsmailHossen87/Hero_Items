@@ -8,6 +8,7 @@ import { USER_ROLES } from "../../../enums/user";
 import { Setting } from "../Setting/setting.model";
 import { isSameDay } from "../user/user.service";
 import { Battle } from "../battle/battle.model";
+import { Types } from "mongoose";
 
 const giveVote = async (userId: string, battleId: string, carId: string) => {
     // 1️⃣ Validate User
@@ -89,24 +90,39 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
 
     // ------------------------------     MAIN LOGIN    ------------------------------
 
-    const battle = await Battle.findOne({ _id: battleId, car1: car._id });
+    const battle = await Battle.findOne({
+        _id: battleId,
+        $or: [{ car1: car._id }, { car2: car._id }]
+    });
 
-    if (battle) {
-        battle.votesCar1 += 1;
-        battle.votersIds.push(user._id);
-        car.earnPoints += car.credit;
-        await car.save();
-        await battle.save();
-    } else {
-        const battle = await Battle.findOne({ _id: battleId, car2: car._id });
-        if (battle) {
-            battle.votesCar2 += 1;
-            battle.votersIds.push(user._id);
-            car.earnPoints += car.credit;
-            await car.save();
-            await battle.save();
-        }
+    if (!battle) {
+        throw new Error("Battle not found");
     }
+
+    // prevent duplicate vote
+    if (battle.votersIds.some(id => id.toString() === user._id.toString())) {
+        throw new Error("You already voted");
+    }
+
+    // increase vote count
+    if (battle.car1.toString() === car._id.toString()) {
+        battle.votesCar1 += 1;
+    } else {
+        battle.votesCar2 += 1;
+    }
+
+    battle.votersIds.push(user._id);
+    car.earnPoints += car.credit;
+
+    battle.voteTrack.push({
+        userId: user._id,
+        carId: new Types.ObjectId(car._id),
+        vote: car.credit
+    });
+
+    await car.save();
+    await battle.save();
+
     user.dailyVoteCount += 1;
     user.lastVoteDate = today;
     await user.save();

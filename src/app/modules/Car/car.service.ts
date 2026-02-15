@@ -64,6 +64,10 @@ const getAllCars = async (query: any) => {
         allCars.build()
     ])
 
+    if (data.length <= 0) {
+        throw new Error("No cars found")
+    }
+
     return { meta, data }
 }
 

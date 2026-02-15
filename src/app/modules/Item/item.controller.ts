@@ -76,9 +76,23 @@ const buyItem = catchAsync(async (req: Request, res: Response, next: NextFunctio
     });
 })
 
+const buyItemHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const query = req.query;
+    const user = req.user;
+    const item = await ItemService.buyItemHistory(user as JwtPayload, query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Transaction history fetched successfully',
+        data: item.data,
+        meta: item.meta,
+    });
+})
+
 export const ItemController = {
     createItem,
     getAllItem,
     ItemDetails,
-    buyItem
+    buyItem,
+    buyItemHistory
 }

@@ -18,9 +18,8 @@ const createTire = catchAsync(async (req: Request, res: Response, next: NextFunc
 
 
 const getAllTire = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user?.id as string;
     const query = req.query
-    const result = await TireService.getAllTire(userId as string, query)
+    const result = await TireService.getAllTire(query)
     res.status(200).json({
         success: true,
         message: "Tire fetched successfully",

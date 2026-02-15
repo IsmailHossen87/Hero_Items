@@ -43,15 +43,24 @@ const userSchema = new Schema<IUser, UserModal>(
     followersCount: { type: Number, default: 0 },
     followingCount: { type: Number, default: 0 },
 
+    verified: { type: Boolean, default: false, },
+    address: { type: String, default: '', },
+    fcmToken: { type: String, default: '', },
 
     authentication: {
       isResetPassword: { type: Boolean, default: false },
       otp: { type: Number, default: null },
       expireAt: { type: Date, default: null },
     },
-    verified: { type: Boolean, default: false, },
-    address: { type: String, default: '', },
-    fcmToken: { type: String, default: '', },
+
+    stripeAccountInfo: {
+      stripeAccountId: { type: String },
+      stripeAccountStatus: { type: String },
+      isCompleted: { type: Boolean, default: false },
+      stripeConnectedAccount: { type: String },
+      loginUrl: { type: String },
+    },
+
   },
   { timestamps: true, versionKey: false }
 );

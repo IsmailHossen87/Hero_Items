@@ -41,6 +41,14 @@ export type IUser = {
     expireAt: Date | null;
   };
 
+  stripeAccountInfo?: {
+    stripeAccountId?: string;
+    stripeAccountStatus?: 'pending' | 'active' | 'restricted';
+    isCompleted: boolean;
+    stripeConnectedAccount: string;
+    loginUrl?: string;
+  } | null;
+
   address?: string;
   fcmToken?: string;
   isMatchPassword(password: string): Promise<boolean>;

@@ -3,15 +3,15 @@ export const searchableFieldsItem = ["itemName", "itemDescription"];
 export interface IItem {
     userId: Types.ObjectId
     buyerId: Types.ObjectId[];
-    itemName: String;
-    itemDescription: String;
-    pointCost: Number;
-    discountCost: Number;
-    image: String;
-    categoryType: String;
-    userType: String;
-    totalItem: Number;
-    volume: String;
-    formula: String;
+    itemName: string;
+    itemDescription: string;
+    pointCost: number;
+    discountCost: number;
+    image: string;
+    categoryType: string;
+    userType: string;
+    totalItem: number;
+    volume: string;
+    formula: string;
     status: 'Active' | 'Inactive';
 }

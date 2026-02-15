@@ -10,7 +10,7 @@ export const startBattleCron = () => cron.schedule("0 0 * * *", async () => {
 });
 
 
-export const closeBattleCron = () => cron.schedule("59 23 * * *", async () => {
+export const closeBattleCron = () => cron.schedule("0 0 * * *", async () => {
     console.log("⏰ Closing daily battles...");
     await battleService.closeDailyBattles();
 });

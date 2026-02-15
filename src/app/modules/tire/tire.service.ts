@@ -19,14 +19,9 @@ const createTire = async (userId: string, body: any) => {
 }
 
 
-const getAllTire = async (userId: string, query: any) => {
-    const user = await User.findById(userId)
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "User not found")
-    }
-    if (user.role !== USER_ROLES.ADMIN) {
-        throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to get purchase")
-    }
+const getAllTire = async (query: any) => {
+
+
     const queryBuilder = new QueryBuilder(Tire.find(), query)
         .search(['tireName type'])
         .filter()

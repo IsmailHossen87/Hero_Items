@@ -12,6 +12,7 @@ import { ModelRoutes } from '../app/modules/model/model.router';
 import { notificationRouter } from '../app/modules/notification/notification.router';
 import { battleRouter } from '../app/modules/battle/battle.router';
 import { tireRouter } from '../app/modules/tire/tire.router';
+import stripeAccountRoutes from '../app/modules/stripeAccount/stripeAccount.route';
 
 
 const router = express.Router();
@@ -67,6 +68,10 @@ const apiRoutes = [
   {
     path: '/tire',
     route: tireRouter
+  },
+  {
+    path: '/stripe',
+    route: stripeAccountRoutes
   }
 ];
 

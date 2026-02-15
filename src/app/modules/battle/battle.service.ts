@@ -1,6 +1,9 @@
+import AppError from "../../../errors/AppError";
+import { QueryBuilder } from "../../../util/QueryBuilder";
 import { Car } from "../Car/car.model";
 import { User } from "../user/user.model";
 import { Battle } from "./battle.model";
+import httpstatus from "http-status-codes"
 
 const generateDailyBattles = async () => {
     const cars = await Car.find({ status: "APPROVED" });
@@ -16,6 +19,11 @@ const generateDailyBattles = async () => {
             const car1 = cars[i];
             const car2 = cars[j];
 
+            // ✅ Category same কিনা check
+            if (car1.category.toString() !== car2.category.toString()) {
+                continue;
+            }
+
             const battleNumber = `${car1._id}_${car2._id}_${today.toISOString().slice(0, 10)}`;
 
             const exists = await Battle.findOne({ battleNumber });
@@ -23,6 +31,7 @@ const generateDailyBattles = async () => {
 
             const battle = await Battle.create({
                 car1: car1._id,
+                categoryId: car1.category,
                 car2: car2._id,
                 battleNumber,
                 battleDate: today
@@ -94,8 +103,51 @@ const closeDailyBattles = async () => {
 };
 
 
+const getBattle = async (query: any) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const battle = Battle.find({ status: "PENDING", battleDate: { $gte: today, $lt: tomorrow } })
+        .populate("car1 car2", "modelName images categoryName manufacturer")
+        .select("-voteTrack -votersIds")
+        .lean()
+
+    const querybuilder = new QueryBuilder(battle, query)
+        .search(['name categoryName'])
+        .filter()
+        .paginate()
+        .sort()
+
+    const [meta, data] = await Promise.all([
+        querybuilder.getMeta(),
+        querybuilder.build()
+    ])
+
+    if (data.length <= 0) {
+        throw new AppError(httpstatus.NOT_FOUND, 'No battles found')
+    }
+
+    const battleInfo = await data.map((car: any) => {
+        const { car1, car2, ...rest } = car
+        console.log(car1)
+        return {
+            ...rest,
+            car1Image: car1.images[0],
+            categoryName1: car1.categoryName,
+            car2Image: car2.images[0],
+            categoryName2: car2.categoryName
+        }
+
+    })
+
+    return { meta, data: battleInfo };
+}
 
 export const battleService = {
     generateDailyBattles,
-    closeDailyBattles
+    closeDailyBattles,
+    getBattle
 };

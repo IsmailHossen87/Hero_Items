@@ -14,6 +14,9 @@ import config from '../../../config';
 import generateNumber from '../../../util/generateOTP';
 import { USER_ROLES } from '../../../enums/user';
 import httpStatus from 'http-status-codes';
+import { Item } from '../Item/item.model';
+import { Transaction } from '../transaction/transaction.model';
+import { QueryBuilder } from '../../../util/QueryBuilder';
 
 
 const OTP_EXPIRATION = 2 * 60;
@@ -82,9 +85,9 @@ const getUserProfileFromDB = async (
   const { id } = user;
   let userData;
   if (userId) {
-    userData = await User.findById(userId).select("-followers -following -auths -authentication").lean();
+    userData = await User.findById(userId).select("-followers -following -auths -authentication -fcmToken -password").lean();
   } else {
-    userData = await User.findById(id).select("-followers -following -auths -authentication").lean();
+    userData = await User.findById(id).select("-followers -following -auths -authentication -fcmToken -password").lean();
   }
   const car = await Car.find({ userId: userData?._id });
   if (!userData) {
@@ -314,6 +317,36 @@ const userDeleteFunc = async (userId: string) => {
   return null;
 };
 
+// PURCHAE_HSITOR
+const getPurchaseHistory = async (userId: string, query: any) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const buyCoinHistory = Transaction.find({
+    userId: user.id,
+    $or: [
+      { type: "coin" },
+      { type: "credit" },
+    ]
+  }).populate("userId", "name email").lean();
+  const queryBuilder = new QueryBuilder(buyCoinHistory, query)
+    .search(['name', 'email'])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [meta, data] = await Promise.all([
+    queryBuilder.getMeta(),
+    queryBuilder.build(),
+  ]);
+  if (data.length === 0) {
+    throw new AppError(httpStatus.NOT_FOUND, "No purchase history found");
+  }
+
+  return { data, meta };
+};
+
 
 export const UserService = {
   createUUserToDB,
@@ -324,4 +357,5 @@ export const UserService = {
   previewDailyReward,
   claimDailyReward,
   deleteUser,
+  getPurchaseHistory,
 };

@@ -139,4 +139,18 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 
-export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser, dailyClaim, dailyPreview, deleteUser };
+// PURCHASE
+const getPurchaseHistory = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload;
+  const result = await UserService.getPurchaseHistory(user.id, req.query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Purchase history retrieved successfully',
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+export const UserController = { createUser, getUserProfile, updateProfile, getAllUser, followUser, dailyClaim, dailyPreview, deleteUser, getPurchaseHistory };

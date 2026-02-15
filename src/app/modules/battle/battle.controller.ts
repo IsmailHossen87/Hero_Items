@@ -29,8 +29,19 @@ const closeDailyBattles = catchAsync(async (req: Request, res: Response, next: N
     });
 });
 
+const getBattle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const result = await battleService.getBattle(req.query as any)
 
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'Battle fetched successfully',
+        meta: result.meta,
+        data: result.data
+    });
+});
 export const battleController = {
     RandomBattle,
-    closeDailyBattles
+    closeDailyBattles,
+    getBattle
 }

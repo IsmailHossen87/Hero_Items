@@ -7,7 +7,7 @@ import { USER_ROLES } from "../../../enums/user";
 const router = Router();
 router.route('/')
     .post(auth(USER_ROLES.ADMIN), PurchaseController.createTire)
-    .get(auth(USER_ROLES.ADMIN), PurchaseController.getAllTire)
+    .get(PurchaseController.getAllTire)
 
 router.route("/:id")
     .get(auth(USER_ROLES.ADMIN), PurchaseController.getTireById)

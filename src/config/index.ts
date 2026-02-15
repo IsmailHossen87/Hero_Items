@@ -29,6 +29,8 @@ export default {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
+  BACKEND_URL: process.env.BACKEND_URL,
+  FRONTEND_URL_DASHBOARD: process.env.FRONTEND_URL_DASHBOARD,
   jwt: {
     jwt_secret: process.env.JWT_SECRET,
     jwt_expire_in: process.env.JWT_EXPIRE_IN,

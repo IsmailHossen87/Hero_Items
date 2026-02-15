@@ -4,6 +4,7 @@ import { battleController } from "./battle.controller";
 // battle.router.ts
 const router = Router();
 
-router.get("/random", battleController.RandomBattle)
+router.get("/", battleController.getBattle)
+
 
 export const battleRouter = router;

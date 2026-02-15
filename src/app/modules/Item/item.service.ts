@@ -13,6 +13,7 @@ import generateNumber from "../../../util/generateOTP";
 import { INotification, IReferenceType, NOTIFICATION_TYPE } from "../notification/notification.interface";
 import { saveNotification } from "../notification/sharedNotification";
 import { sendReaujableNotification } from "../notification/notification.model";
+import { Transaction } from "../transaction/transaction.model";
 
 
 export interface IItemPurchase {
@@ -144,6 +145,15 @@ const buyItem = async (id: string, user: JwtPayload) => {
             item.save({ session })
         ]);
 
+        await Transaction.create({
+            userId: user.id,
+            itemId: item.id,
+            totalCoin: pointCost,
+            type: "redeem",
+            currency: "BDT",
+            paymentMethod: "Coin",
+            status: "success",
+        })
         sendReaujableNotification({
             fcmToken: userInfo.fcmToken,
             title: "Item Purchased",
@@ -154,11 +164,6 @@ const buyItem = async (id: string, user: JwtPayload) => {
             receiverId: userInfo.id,
             image: item?.image as string,
         })
-
-        // 6️⃣ Send Emails (after successful transaction)
-        const purchaseDate = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-
-        // const otp = generateNumber(8)
 
         const customerEmailData = {
             name: userInfo.name,
@@ -196,13 +201,39 @@ const buyItem = async (id: string, user: JwtPayload) => {
             httpStatus.INTERNAL_SERVER_ERROR,
             "Failed to process purchase"
         );
-
     }
+};
+
+
+const buyItemHistory = async (user: JwtPayload, query: any) => {
+    const visitor = await User.findById(user.id);
+    if (!visitor) {
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    const itemHistory = Transaction.find({ userId: user.id, type: "redeem" }).lean();
+
+    const queryBuilder = new QueryBuilder(itemHistory, query)
+        .search(['name', 'email'])
+        .filter()
+        .dateRange()
+        .sort()
+        .paginate();
+    const [meta, data] = await Promise.all([
+        queryBuilder.getMeta(),
+        queryBuilder.build(),
+    ]);
+    if (data.length === 0) {
+        throw new AppError(httpStatus.NOT_FOUND, "No purchase history found");
+    }
+
+    return { data, meta };
 };
 
 export const ItemService = {
     createItem,
     getAllItem,
     ItemDetails,
-    buyItem
+    buyItem,
+    buyItemHistory
 }

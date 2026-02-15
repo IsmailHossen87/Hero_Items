@@ -1,4 +1,5 @@
 import AppError from "../../../errors/AppError"
+import { Item } from "../Item/item.model"
 import { Tire } from "../tire/tire.model"
 import { User } from "../user/user.model"
 import { ITransaction } from "./transaction.interface"
@@ -51,5 +52,5 @@ const buyTireTransaction = async (userId: string, tireId: string) => {
 
 
 export const TransactionService = {
-    buyTireTransaction
-}
+    buyTireTransaction,
+}   

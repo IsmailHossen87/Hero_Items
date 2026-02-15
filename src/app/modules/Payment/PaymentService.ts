@@ -1,9 +1,11 @@
 
-import Stripe from 'stripe';
 import stripe from '../../config/stripe.config';
 import { User } from '../user/user.model';
 import { Tire } from '../tire/tire.model';
 import config from '../../../config';
+import { Item } from '../Item/item.model';
+import AppError from '../../../errors/AppError';
+import httpStatus from 'http-status-codes';
 
 const createPaymentIntent = async (id: string, userId: string) => {
   // payment.service.ts
@@ -11,7 +13,7 @@ const createPaymentIntent = async (id: string, userId: string) => {
   const user = await User.findById(userId);
 
   if (!tire || !user) {
-    throw new Error("Tire or user not found");
+    throw new AppError(httpStatus.NOT_FOUND, "Tire or user not found")
   }
 
 
@@ -46,6 +48,7 @@ const createPaymentIntent = async (id: string, userId: string) => {
 
   return { url: session.url, sessionId: session.id };
 }
+
 
 export const createPaymentService = {
   createPaymentIntent,
