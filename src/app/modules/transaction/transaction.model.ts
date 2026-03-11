@@ -6,6 +6,7 @@ const transactionSchema = new mongoose.Schema<ITransaction>({
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number },
     totalCoin: { type: Number },
+    value: { type: Number },
     tireId: { type: Schema.Types.ObjectId, ref: 'Tire' },
     itemId: { type: Schema.Types.ObjectId, ref: 'Item' },
     currency: {

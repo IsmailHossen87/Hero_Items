@@ -23,9 +23,8 @@ const OTP_EXPIRATION = 5 * 60; // 5 minutes
 // 🔐 Login User
 const loginUserFromDB = async (payload: ILoginData) => {
   const { email, password } = payload;
-
-
   const isExistUser = await User.findOne({ email }).select("+password");
+
   if (!isExistUser) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }

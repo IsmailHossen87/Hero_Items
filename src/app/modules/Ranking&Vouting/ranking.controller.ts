@@ -19,8 +19,6 @@ const giveVote = catchAsync(async (req: Request, res: Response, next: NextFuncti
     });
 });
 
-
-
 // vut history
 const getVutHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user
@@ -46,4 +44,15 @@ const resetVote = catchAsync(async (req: Request, res: Response, next: NextFunct
     });
 });
 
-export const RankingController = { giveVote, getVutHistory, resetVote }
+const myVoteHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user
+    const result = await RankingService.myVoteHistory(req.params.id as string, user as JwtPayload);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: 'My vote history fetched successfully',
+        data: { ...result, votedCarId: result.votedCarId?.toString() }
+    });
+});
+
+export const RankingController = { giveVote, getVutHistory, resetVote, myVoteHistory }

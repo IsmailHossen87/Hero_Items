@@ -8,10 +8,6 @@ const createCategoryZodSchema = z.object({
             required_error: "Name is required",
             invalid_type_error: "Name must be a string"
         }),
-        description: z.string({
-            required_error: "Description is required",
-            invalid_type_error: "Description must be a string"
-        }),
         credit: z.number({
             required_error: "credit is required",
             invalid_type_error: "credit must be a number"

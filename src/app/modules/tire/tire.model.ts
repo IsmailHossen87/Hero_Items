@@ -22,6 +22,11 @@ const TireSchema = new mongoose.Schema<IPurchase>({
     value: {
         type: Number,
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        default: 'active'
     }
 })
 

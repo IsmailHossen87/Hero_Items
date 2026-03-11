@@ -26,6 +26,7 @@ const userSchema = new Schema<IUser, UserModal>(
     dailyCredit: { type: Number, default: 0, },
     moneyCredit: { type: Number, default: 0, },
     coin: { type: Number, default: 0 },
+    point: { type: Number, default: 0 },
 
     ranking: { type: Number },
     dailyRewardPending: { type: Number, default: 0 },

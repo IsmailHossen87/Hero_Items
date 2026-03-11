@@ -1,6 +1,7 @@
 import { USER_ROLES } from "../../../enums/user"
 import { sendFirebaseNotification } from "../../../shared/sendNotification"
 import { QueryBuilder } from "../../../util/QueryBuilder"
+import { addNewCarToBattles } from "../battle/battle.service"
 import { IReferenceType, NOTIFICATION_TYPE } from "../notification/notification.interface"
 import { sendReaujableNotification } from "../notification/notification.model"
 import { saveNotification } from "../notification/sharedNotification"
@@ -169,6 +170,7 @@ const changeStatus = async (carId: string, userId: string) => {
     let status;
     if (CarInfo.status === IStatus.PENDING) {
         status = IStatus.APPROVED
+        await addNewCarToBattles(carId)
     } else if (CarInfo.status === IStatus.APPROVED) {
         status = IStatus.REJECTED
     } else if (CarInfo.status === IStatus.REJECTED) {

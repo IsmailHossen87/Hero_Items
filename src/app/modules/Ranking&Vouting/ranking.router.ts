@@ -10,6 +10,9 @@ router.route("/:id")
     .post(auth(USER_ROLES.USER), RankingController.giveVote)
     .patch(auth(USER_ROLES.ADMIN), RankingController.resetVote)
 
+router.route("/vote-history/:id")
+    .get(auth(USER_ROLES.USER), RankingController.myVoteHistory)
+
 
 
 export const Ranking_Voting_Router = router

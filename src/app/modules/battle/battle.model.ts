@@ -6,8 +6,6 @@ const battleSchema = new Schema<IBattle>(
     {
         car1: { type: Schema.Types.ObjectId, ref: "Car", required: true },
         car2: { type: Schema.Types.ObjectId, ref: "Car", required: true },
-
-        battleNumber: { type: String, required: true, unique: true },
         categoryId: { type: Schema.Types.ObjectId, ref: "Category", required: true },
 
         battleDate: { type: Date, required: true },

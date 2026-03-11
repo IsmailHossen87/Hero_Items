@@ -3,13 +3,12 @@ import stripe from '../../config/stripe.config';
 import { User } from '../user/user.model';
 import { Tire } from '../tire/tire.model';
 import config from '../../../config';
-import { Item } from '../Item/item.model';
 import AppError from '../../../errors/AppError';
 import httpStatus from 'http-status-codes';
 
 const createPaymentIntent = async (id: string, userId: string) => {
   // payment.service.ts
-  const tire = await Tire.findById(id);
+  const tire = await Tire.findById(id, { status: 'active' });
   const user = await User.findById(userId);
 
   if (!tire || !user) {

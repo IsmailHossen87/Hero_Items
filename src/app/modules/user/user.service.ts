@@ -347,6 +347,35 @@ const getPurchaseHistory = async (userId: string, query: any) => {
   return { data, meta };
 };
 
+// for admin
+
+const getTransactionHistory = async (userId: string, query: any) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const buyCoinHistory = Transaction.find({
+    $or: [
+      { type: "coin" },
+      { type: "credit" },
+    ]
+  }).populate("userId", "name email").lean();
+  const queryBuilder = new QueryBuilder(buyCoinHistory, query)
+    .search(['name', 'email'])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [meta, data] = await Promise.all([
+    queryBuilder.getMeta(),
+    queryBuilder.build(),
+  ]);
+  if (data.length === 0) {
+    throw new AppError(httpStatus.NOT_FOUND, "No purchase history found");
+  }
+
+  return { data, meta };
+};
 
 export const UserService = {
   createUUserToDB,
@@ -358,4 +387,5 @@ export const UserService = {
   claimDailyReward,
   deleteUser,
   getPurchaseHistory,
+  getTransactionHistory
 };

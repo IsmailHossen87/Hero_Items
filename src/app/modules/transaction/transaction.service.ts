@@ -20,10 +20,11 @@ const buyTireTransaction = async (userId: string, tireId: string) => {
             userId: user._id,
             tireId: tire._id,
             amount: tire.price,
+            value: tire.value,
             type: tire.type,
             currency: "usd",
             paymentMethod: "stripe",
-            status: "pending",
+            status: "success",
 
         })
 

@@ -8,6 +8,7 @@ export interface ITransaction {
     itemId: Types.ObjectId;
     amount: number;
     totalCoin: number;
+    value: number;
     currency: string;
     type: string;
     paymentMethod: string;

@@ -10,7 +10,7 @@ export interface ICategory {
     userId: Types.ObjectId,
     name: string,
     categorySlug: string,
-    description: string,
+    description?: string,
     isDeleted: boolean,
     voteStatus: boolean,
     credit: number,

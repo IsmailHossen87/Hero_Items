@@ -5,12 +5,11 @@ import { User } from "../user/user.model";
 import { Battle } from "./battle.model";
 import httpstatus from "http-status-codes"
 
+// ✅ Daily Cron - রাত ১২টায় সব approved cars এর মধ্যে battles generate করে
 const generateDailyBattles = async () => {
     const cars = await Car.find({ status: "APPROVED" });
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const battles = [];
 
     for (let i = 0; i < cars.length; i++) {
@@ -19,21 +18,25 @@ const generateDailyBattles = async () => {
             const car1 = cars[i];
             const car2 = cars[j];
 
-            // ✅ Category same কিনা check
+            // ✅ Same category কিনা check
             if (car1.category.toString() !== car2.category.toString()) {
                 continue;
             }
 
-            const battleNumber = `${car1._id}_${car2._id}_${today.toISOString().slice(0, 10)}`;
-
-            const exists = await Battle.findOne({ battleNumber });
+            // ✅ এই specific pair এর আজকের battle আগে তৈরি হয়েছে কিনা check
+            const exists = await Battle.findOne({
+                $or: [
+                    { car1: car1._id, car2: car2._id },
+                    { car1: car2._id, car2: car1._id }
+                ],
+                battleDate: { $gte: today }
+            });
             if (exists) continue;
 
             const battle = await Battle.create({
                 car1: car1._id,
                 categoryId: car1.category,
                 car2: car2._id,
-                battleNumber,
                 battleDate: today
             });
 
@@ -41,6 +44,48 @@ const generateDailyBattles = async () => {
         }
     }
 
+    return battles;
+};
+
+// ✅ Car approve হলে সাথে সাথে নতুন car কে battle এ add করে
+export const addNewCarToBattles = async (newCarId: string) => {
+    const newCar = await Car.findById(newCarId);
+    if (!newCar) return [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // ✅ Same category এর other approved cars খোঁজো
+    const otherCars = await Car.find({
+        status: "APPROVED",
+        category: newCar.category,
+        _id: { $ne: newCar._id }
+    });
+
+    const battles = [];
+
+    for (const otherCar of otherCars) {
+        // ✅ এই pair এর battle আর আগে হয়েছে কিনা check
+        const exists = await Battle.findOne({
+            $or: [
+                { car1: newCar._id, car2: otherCar._id },
+                { car1: otherCar._id, car2: newCar._id }
+            ],
+            battleDate: { $gte: today }
+        });
+        if (exists) continue;
+
+        const battle = await Battle.create({
+            car1: newCar._id,
+            categoryId: newCar.category,
+            car2: otherCar._id,
+            battleDate: today
+        });
+
+        battles.push(battle);
+    }
+
+    console.log(`✅ New car [${newCarId}] added to ${battles.length} battle(s)`);
     return battles;
 };
 
@@ -54,10 +99,10 @@ const closeDailyBattles = async () => {
 
     const battles = await Battle.find({
         status: "PENDING",
-        battleDate: {
-            $gte: today,
-            $lt: tomorrow
-        }
+        // battleDate: {
+        //     $gte: today,
+        //     // $lt: tomorrow
+        // }
     });
 
     for (const battle of battles) {
@@ -82,16 +127,15 @@ const closeDailyBattles = async () => {
         const winnerCar = await Car.findById(winnerCarId);
         if (!winnerCar) continue;
 
-        const rewardCoin = winnerCar.credit;
+        // const rewardCoin = winnerCar.credit * 10;
 
         // ✅ voters reward
-        if (battle.votersIds?.length > 0) {
-            await User.updateMany(
-                { _id: { $in: battle.votersIds } },
-                { $inc: { coin: rewardCoin } }
-            );
-        }
-
+        // if (battle.votersIds?.length > 0) {
+        //     await User.updateMany(
+        //         { _id: { $in: battle.votersIds } },
+        //         // { $inc: { coin: rewardCoin } }
+        //     );
+        // }
         // ✅ battle close
         await Battle.findByIdAndUpdate(battle._id, {
             status: "COMPLETED",
@@ -103,51 +147,110 @@ const closeDailyBattles = async () => {
 };
 
 
-const getBattle = async (query: any) => {
+// const getBattle = async (query: any, userId: string) => {
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(today.getDate() + 1);
+
+//     const battle = Battle.find({ status: "PENDING", battleDate: { $gte: today, $lt: tomorrow } })
+//         .populate("car1 car2")
+//         .select("-votersIds")
+//         .lean()
+
+//     const querybuilder = new QueryBuilder(battle, query)
+//         .search(['name categoryName'])
+//         .filter()
+//         .paginate()
+//         .sort()
+
+//     const [meta, data] = await Promise.all([
+//         querybuilder.getMeta(),
+//         querybuilder.build()
+//     ])
+
+//     const myBattles = data?.filter((battle: any) =>
+//         battle.voteTrack?.some((v: any) => v.userId.toString() === userId)
+//     );
+
+//     console.log("My Battles 🛫🛫👨", myBattles);
+
+//     if (data.length <= 0) {
+//         throw new AppError(httpstatus.NOT_FOUND, 'No battles found')
+//     }
+
+//     return { meta, data: { AllBattleData: data } };
+// }
+const getBattle = async (query: any, userId: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const battle = Battle.find({ status: "PENDING", battleDate: { $gte: today, $lt: tomorrow } })
-        .populate("car1 car2", "modelName images categoryName manufacturer")
-        .select("-voteTrack -votersIds")
-        .lean()
+    const battleQuery = Battle.find({
+        status: "PENDING",
+        // battleDate: { $gte: today, $lt: tomorrow }
+    })
+        .populate("car1 car2")
+        .select("-votersIds")
+        .lean();
 
-    const querybuilder = new QueryBuilder(battle, query)
-        .search(['name categoryName'])
+    const querybuilder = new QueryBuilder(battleQuery, query)
+        .search(['name', 'categoryName'])
         .filter()
         .paginate()
-        .sort()
+        .sort();
 
     const [meta, data] = await Promise.all([
         querybuilder.getMeta(),
         querybuilder.build()
-    ])
+    ]);
 
-    if (data.length <= 0) {
-        throw new AppError(httpstatus.NOT_FOUND, 'No battles found')
+    if (!data || data.length === 0) {
+        throw new AppError(httpstatus.NOT_FOUND, 'No battles found');
     }
 
-    const battleInfo = await data.map((car: any) => {
-        const { car1, car2, ...rest } = car
-        console.log(car1)
+
+    const updatedData = data.map((battle: any) => {
+        // Find if user voted and which car they voted for
+        const userVote = (battle.voteTrack || []).find(
+            (v: any) => v.userId.toString() === userId
+        );
+
+        // Add isVoted field to cars
+        const car1 = {
+            ...battle.car1,
+            isVoted: userVote?.carId.toString() === battle.car1._id.toString()
+        };
+
+        const car2 = {
+            ...battle.car2,
+            isVoted: userVote?.carId.toString() === battle.car2._id.toString()
+        };
+
+        // Remove voteTrack from response (optional)
+        const { voteTrack, ...rest } = battle;
+
         return {
             ...rest,
-            car1Image: car1.images[0],
-            categoryName1: car1.categoryName,
-            car2Image: car2.images[0],
-            categoryName2: car2.categoryName
-        }
+            car1,
+            car2
+        };
+    });
 
-    })
+    return {
+        meta,
+        data: updatedData
+    };
+};
 
-    return { meta, data: battleInfo };
-}
+
 
 export const battleService = {
     generateDailyBattles,
+    addNewCarToBattles,
     closeDailyBattles,
     getBattle
 };

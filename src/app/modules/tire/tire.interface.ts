@@ -5,4 +5,5 @@ export interface IPurchase {
     type: 'coin' | 'credit'
     price: number;
     value: number;
+    status: 'active' | 'inactive'
 }

@@ -11,18 +11,13 @@ import { Battle } from "../battle/battle.model";
 import { Types } from "mongoose";
 
 const giveVote = async (userId: string, battleId: string, carId: string) => {
-    // 1️⃣ Validate User
     const user = await User.findById(userId);
     if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-    // 2️⃣ Validate Car
     const car = await Car.findById(carId);
     if (!car) throw new AppError(StatusCodes.NOT_FOUND, "Car not found");
-
-    // 3️⃣ Validate Car Owner
     const carOwner = await User.findById(car.userId);
 
-    // 4️⃣ Car status check
     if (car.status !== IStatus.APPROVED) throw new AppError(StatusCodes.BAD_REQUEST, "Car is not approved");
 
     // 5️⃣ Check user coins
@@ -38,6 +33,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     if (!user.lastVoteDate || !isSameDay(user.lastVoteDate, today)) {
         user.dailyVoteCount = 0;
     }
+
 
     // 8️⃣ Check daily vote limit
     // if (user.dailyVoteCount >= dailyLimit) throw new AppError(StatusCodes.BAD_REQUEST, "Daily vote limit exceeded");
@@ -113,6 +109,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
 
     battle.votersIds.push(user._id);
     car.earnPoints += car.credit;
+    user.point += car.credit
 
     battle.voteTrack.push({
         userId: user._id,
@@ -137,6 +134,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
 
 const updateRanking = async (user: any, car: any) => {
     const voteCostCredit = car.credit;
+    user.coin += voteCostCredit * 10;
 
     if (user.dailyCredit >= voteCostCredit) {
         user.dailyCredit -= voteCostCredit;
@@ -146,6 +144,7 @@ const updateRanking = async (user: any, car: any) => {
         user.moneyCredit -= remainingCost;
     }
     car.votes += 1;
+    car.userVotes = true;
 
     await car.save();
     await user.save();
@@ -212,4 +211,24 @@ const resetVote = async (carId: string, user: JwtPayload) => {
     return '';
 }
 
-export const RankingService = { giveVote, vuterHistory, resetVote }
+
+
+const myVoteHistory = async (battleId: string, user: JwtPayload) => {
+    const userHistory = await User.findById(user.id);
+    if (!userHistory) {
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+    }
+    const battle = await Battle.findById(battleId);
+
+    const userVote = battle?.voteTrack.find(
+        (vote) => vote.userId.toString() === user.id
+    );
+
+    return {
+        ...battle?.toObject(),
+        votedCarId: userVote ? userVote.carId : null
+    };
+
+}
+
+export const RankingService = { giveVote, vuterHistory, resetVote, myVoteHistory }

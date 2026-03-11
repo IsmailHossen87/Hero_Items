@@ -5,10 +5,10 @@ import { Car } from "../Car/car.model";
 const categorySchema = new mongoose.Schema<ICategory>({
     image: { type: String },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     categorySlug: { type: String },
     isDeleted: { type: Boolean, default: false },
-    description: { type: String, required: true },
+    description: { type: String },
     voteStatus: { type: Boolean, default: true },
     credit: { type: Number, default: 0 },
     totalCar: { type: Number, default: 0 },

@@ -30,7 +30,8 @@ const closeDailyBattles = catchAsync(async (req: Request, res: Response, next: N
 });
 
 const getBattle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const result = await battleService.getBattle(req.query as any)
+    const user = req.user?.id
+    const result = await battleService.getBattle(req.query as any, user as string)
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,

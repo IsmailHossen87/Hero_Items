@@ -26,6 +26,7 @@ router
 
 router.get('/', UserController.getAllUser);
 router.get('/purchase-history', auth(USER_ROLES.USER), UserController.getPurchaseHistory)
+router.get("/transaction-history", auth(USER_ROLES.ADMIN), UserController.getTransactionHistory)
 router.post('/daily-claim', auth(USER_ROLES.USER), UserController.dailyClaim)
 router.get('/daily-preview', auth(USER_ROLES.USER), UserController.dailyPreview)
 router.delete("/delete/:id", auth(USER_ROLES.ADMIN, USER_ROLES.USER), UserController.deleteUser)

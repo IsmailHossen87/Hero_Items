@@ -30,6 +30,7 @@ export type IUser = {
   dailyCredit: number;
   moneyCredit: number;
   coin: number;
+  point: number;
   dailyRewardPending: number;
   lastDailyReward: Date;
   dailyVoteCount: number;
