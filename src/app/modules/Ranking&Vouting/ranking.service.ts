@@ -9,6 +9,7 @@ import { Setting } from "../Setting/setting.model";
 import { isSameDay } from "../user/user.service";
 import { Battle } from "../battle/battle.model";
 import { Types } from "mongoose";
+import { Category } from "../Category/category.model";
 
 const giveVote = async (userId: string, battleId: string, carId: string) => {
     const user = await User.findById(userId);
@@ -133,8 +134,16 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
 
 
 const updateRanking = async (user: any, car: any) => {
+    const category = await Category.findById(car.category);
+    if (!category) throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     const voteCostCredit = car.credit;
-    user.coin += voteCostCredit * 10;
+    const coin = category.credit * 10;
+    user.coin += coin;
+
+
+
+
+
 
     if (user.dailyCredit >= voteCostCredit) {
         user.dailyCredit -= voteCostCredit;

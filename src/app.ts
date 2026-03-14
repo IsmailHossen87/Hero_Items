@@ -31,7 +31,7 @@ app.use(cors({
   origin: [
     "http://10.10.7.37:3000",
     "http://10.10.7.37:3001",
-    "http://10.10.7.37:3002",
+    "http://10.10.7.37:3000",
     "https://hero-itens-admin-dashboard.vercel.app",
   ],
   credentials: true,

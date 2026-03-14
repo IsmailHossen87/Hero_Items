@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import AppError from "../../../errors/AppError";
 import { QueryBuilder } from "../../../util/QueryBuilder";
 import { Car } from "../Car/car.model";
@@ -183,6 +184,7 @@ const closeDailyBattles = async () => {
 //     return { meta, data: { AllBattleData: data } };
 // }
 const getBattle = async (query: any, userId: string) => {
+    const usersId = new mongoose.Types.ObjectId(userId)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -193,7 +195,20 @@ const getBattle = async (query: any, userId: string) => {
         status: "PENDING",
         // battleDate: { $gte: today, $lt: tomorrow }
     })
-        .populate("car1 car2")
+        .populate({
+            path: "car1",
+            populate: {
+                path: "userId",
+                select: "name image"
+            }
+        })
+        .populate({
+            path: "car2",
+            populate: {
+                path: "userId",
+                select: "name image"
+            }
+        })
         .select("-votersIds")
         .lean();
 
@@ -213,32 +228,31 @@ const getBattle = async (query: any, userId: string) => {
     }
 
 
-    const updatedData = data.map((battle: any) => {
-        // Find if user voted and which car they voted for
-        const userVote = (battle.voteTrack || []).find(
-            (v: any) => v.userId.toString() === userId
-        );
+    const updatedData = await Promise.all(
+        data.map(async (battle: any) => {
+            const userVote = (battle.voteTrack || []).find(
+                (v: any) => v.userId === usersId
+            );
 
-        // Add isVoted field to cars
-        const car1 = {
-            ...battle.car1,
-            isVoted: userVote?.carId.toString() === battle.car1._id.toString()
-        };
+            const car1 = {
+                ...battle.car1,
+                isVoted: userVote?.carId.toString() === battle.car1._id.toString(),
+            };
 
-        const car2 = {
-            ...battle.car2,
-            isVoted: userVote?.carId.toString() === battle.car2._id.toString()
-        };
+            const car2 = {
+                ...battle.car2,
+                isVoted: userVote?.carId.toString() === battle.car2._id.toString(),
+            };
 
-        // Remove voteTrack from response (optional)
-        const { voteTrack, ...rest } = battle;
+            const { voteTrack, ...rest } = battle;
 
-        return {
-            ...rest,
-            car1,
-            car2
-        };
-    });
+            return {
+                ...rest,
+                car1,
+                car2
+            };
+        })
+    );
 
     return {
         meta,
