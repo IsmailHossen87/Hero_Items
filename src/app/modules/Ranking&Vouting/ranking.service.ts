@@ -24,66 +24,12 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     // 5️⃣ Check user coins
     if ((user.dailyCredit + user.moneyCredit) < car.credit) throw new AppError(StatusCodes.BAD_REQUEST, "Not enough credit,Please Buy Credit");
 
-    // 6️⃣ Load admin settings
-    // const settings = await Setting.findOne();
-    // const dailyLimit = settings?.voteLimit ?? 0;
-
     const today = new Date();
 
     // 7️⃣ Reset daily vote if new day
     if (!user.lastVoteDate || !isSameDay(user.lastVoteDate, today)) {
         user.dailyVoteCount = 0;
     }
-
-
-    // 8️⃣ Check daily vote limit
-    // if (user.dailyVoteCount >= dailyLimit) throw new AppError(StatusCodes.BAD_REQUEST, "Daily vote limit exceeded");
-
-    // 9️⃣ Vote success → update ranking
-    await updateRanking(user, car);
-    // 🔔 10️⃣ Firebase Notifications
-    // ✅ Only send if fcmToken exists
-    // if (user?.fcmToken) {
-    //     await sendReaujableNotification({
-    //         fcmToken: user.fcmToken,
-    //         title: "Vote Given",
-    //         body: `Your vote has been given successfully`,
-    //         type: NOTIFICATION_TYPE.VOTE,
-    //         carId: car._id.toString(),
-    //         senderId: user._id.toString(),
-    //         receiverId: carOwner?._id.toString() || "",
-    //         image: car.images?.[0]?.startsWith("http") ? car.images[0] : undefined,
-    //     });
-    // }
-
-    // if (carOwner?.fcmToken) {
-    //     await sendReaujableNotification({
-    //         fcmToken: carOwner.fcmToken,
-    //         title: "Get Vote",
-    //         body: `Your car has been voted successfully`,
-    //         type: NOTIFICATION_TYPE.VOTE,
-    //         carId: car._id.toString(),
-    //         senderId: user._id.toString(),
-    //         receiverId: carOwner._id.toString(),
-    //         image: car.images?.[0]?.startsWith("http") ? car.images[0] : undefined,
-    //     });
-    // }
-
-    // // 🔔 11️⃣ Save Notification to DB
-    // const valueForNotification = {
-    //     senderId: user._id,
-    //     receiverId: car.userId,
-    //     title: "Vote Given",
-    //     body: "Your vote has been given successfully",
-    //     carId: car._id,
-    //     notificationType: "NOTIFICATION",
-    //     type: NOTIFICATION_TYPE.VOTE,
-    //     status: "SUCCESS",
-    // };
-
-    // await saveNotification(valueForNotification);
-
-    // 12️⃣ Update user coins & daily vote count
 
     // ------------------------------     MAIN LOGIN    ------------------------------
 
@@ -100,6 +46,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
     if (battle.votersIds.some(id => id.toString() === user._id.toString())) {
         throw new Error("You already voted");
     }
+    await updateRanking(user, car);
 
     // increase vote count
     if (battle.car1.toString() === car._id.toString()) {
@@ -110,7 +57,7 @@ const giveVote = async (userId: string, battleId: string, carId: string) => {
 
     battle.votersIds.push(user._id);
     car.earnPoints += car.credit;
-    user.point += car.credit
+    // user.point += car.credit
 
     battle.voteTrack.push({
         userId: user._id,
@@ -139,10 +86,6 @@ const updateRanking = async (user: any, car: any) => {
     const voteCostCredit = car.credit;
     const coin = category.credit * 10;
     user.coin += coin;
-
-
-
-
 
 
     if (user.dailyCredit >= voteCostCredit) {

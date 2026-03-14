@@ -231,7 +231,7 @@ const getBattle = async (query: any, userId: string) => {
     const updatedData = await Promise.all(
         data.map(async (battle: any) => {
             const userVote = (battle.voteTrack || []).find(
-                (v: any) => v.userId === usersId
+                (v: any) => v.userId.toString() === usersId.toString()
             );
 
             const car1 = {

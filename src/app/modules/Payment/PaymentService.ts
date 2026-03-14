@@ -7,8 +7,9 @@ import AppError from '../../../errors/AppError';
 import httpStatus from 'http-status-codes';
 
 const createPaymentIntent = async (id: string, userId: string) => {
+  console.log("ID", id, "USER ID", userId)
   // payment.service.ts
-  const tire = await Tire.findById(id, { status: 'active' });
+  const tire = await Tire.findById(id);
   const user = await User.findById(userId);
 
   if (!tire || !user) {
@@ -20,7 +21,6 @@ const createPaymentIntent = async (id: string, userId: string) => {
     name: user.name,
     email: user.email,
   });
-
 
   let metadata = {
     userId: user._id.toString(),
