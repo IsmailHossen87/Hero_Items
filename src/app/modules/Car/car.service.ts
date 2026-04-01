@@ -72,7 +72,7 @@ const getAllCars = async (query: any) => {
     return { meta, data }
 }
 
-
+// CONNECT_STRIPE
 const SpecificCategoryCars = async (query: any, categoryId: string) => {
     // await syncCarFieldsFromCategory();
     const queryBuilder = new QueryBuilder(Car.find({ category: categoryId }).populate({ "path": "userId", "select": "name" }), query)

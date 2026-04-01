@@ -96,3 +96,19 @@ const changeStatus = catchAsync(async (req: Request, res: Response, next: NextFu
     });
 });
 export const carController = { createCar, getAllCars, getMyCars, carDetails, changeStatus, getSpecificCategoryCars }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
